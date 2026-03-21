@@ -1,0 +1,95 @@
+name: iOS — App Store Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'   # e.g. v1.2.3
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: 'Build number (leave blank to auto-increment)'
+        required: false
+
+concurrency:
+  group: ios-release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release-ios:
+    name: Build & Submit to App Store
+    runs-on: macos-14          # Apple Silicon runner — fastest Xcode builds
+
+    env:
+      FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: 120
+      FASTLANE_XCODEBUILD_SETTINGS_RETRIES: 6
+      # Secrets injected from GitHub repository/environment secrets
+      APPLE_ID:                       ${{ secrets.APPLE_ID }}
+      APP_STORE_CONNECT_TEAM_ID:      ${{ secrets.APP_STORE_CONNECT_TEAM_ID }}
+      DEVELOPER_PORTAL_TEAM_ID:       ${{ secrets.DEVELOPER_PORTAL_TEAM_ID }}
+      MATCH_GIT_URL:                  ${{ secrets.MATCH_GIT_URL }}
+      MATCH_PASSWORD:                 ${{ secrets.MATCH_PASSWORD }}
+      APP_STORE_CONNECT_API_KEY_PATH: /tmp/asc_api_key.json
+      BUILD_NUMBER:                   ${{ github.run_number }}
+
+    steps:
+      # ── Checkout ────────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ── Ruby + Bundler (Fastlane) ───────────────
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+          working-directory: ios
+
+      # ── Node + Bun ──────────────────────────────
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install JS dependencies
+        run: bun install --frozen-lockfile
+
+      # ── Write App Store Connect API key ─────────
+      - name: Write ASC API key
+        run: echo '${{ secrets.APP_STORE_CONNECT_API_KEY_JSON }}' > /tmp/asc_api_key.json
+
+      # ── Write .env ──────────────────────────────
+      - name: Create .env
+        run: echo "MAPBOX_ACCESS_TOKEN=${{ secrets.MAPBOX_ACCESS_TOKEN }}" > .env
+
+      # ── CocoaPods ───────────────────────────────
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: ios/Pods
+          key: pods-${{ hashFiles('ios/Podfile.lock') }}
+          restore-keys: pods-
+
+      - name: Install CocoaPods
+        run: bundle exec pod install --repo-update
+        working-directory: ios
+
+      # ── Run tests before release ─────────────────
+      - name: Run JS tests
+        run: node node_modules/.bin/jest --passWithNoTests --ci
+
+      # ── Fastlane release ─────────────────────────
+      - name: Fastlane release
+        run: bundle exec fastlane release
+        working-directory: ios
+
+      # ── Upload IPA artifact ──────────────────────
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: VibeTrack-${{ github.ref_name }}.ipa
+          path: ios/*.ipa
+          retention-days: 30

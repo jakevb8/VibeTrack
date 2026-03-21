@@ -1,0 +1,69 @@
+# ios/fastlane/Fastfile
+default_platform(:ios)
+
+platform :ios do
+  # ──────────────────────────────────────────────
+  # Before all: ensure we never accidentally use
+  # the keychain cache from a previous run on CI.
+  # ──────────────────────────────────────────────
+  before_all do
+    setup_ci if is_ci
+  end
+
+  # ── Development / debug build ─────────────────
+  desc "Build a debug IPA for local testing"
+  lane :build_debug do
+    match(type: "development", readonly: is_ci)
+    build_app(
+      scheme: "VibeTrack",
+      workspace: "VibeTrack.xcworkspace",
+      configuration: "Debug",
+      export_method: "development",
+      clean: true,
+    )
+  end
+
+  # ── TestFlight beta ───────────────────────────
+  desc "Build and push a beta to TestFlight"
+  lane :beta do
+    match(type: "appstore", readonly: is_ci)
+    increment_build_number(
+      build_number: ENV["BUILD_NUMBER"] || latest_testflight_build_number + 1,
+      xcodeproj: "VibeTrack.xcodeproj",
+    )
+    build_app(
+      scheme: "VibeTrack",
+      workspace: "VibeTrack.xcworkspace",
+      configuration: "Release",
+      export_method: "app-store",
+      clean: true,
+    )
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      api_key_path: ENV["APP_STORE_CONNECT_API_KEY_PATH"],
+    )
+  end
+
+  # ── App Store release ─────────────────────────
+  desc "Submit a new release to the App Store"
+  lane :release do
+    match(type: "appstore", readonly: is_ci)
+    increment_build_number(
+      build_number: ENV["BUILD_NUMBER"],
+      xcodeproj: "VibeTrack.xcodeproj",
+    )
+    build_app(
+      scheme: "VibeTrack",
+      workspace: "VibeTrack.xcworkspace",
+      configuration: "Release",
+      export_method: "app-store",
+      clean: true,
+    )
+    upload_to_app_store(
+      skip_metadata: false,
+      skip_screenshots: true,
+      force: true,
+      api_key_path: ENV["APP_STORE_CONNECT_API_KEY_PATH"],
+    )
+  end
+end
