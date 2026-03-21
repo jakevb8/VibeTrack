@@ -15,8 +15,8 @@
         "react-native": "0.74.5",
         "react-native-dotenv": "^3.4.11",
         "react-native-gesture-handler": "^2.30.0",
-        "react-native-mmkv": "^4.3.0",
-        "react-native-reanimated": "^4.2.3",
+        "react-native-mmkv": "2.12.2",
+        "react-native-reanimated": "3.19.5",
         "react-native-safe-area-context": "^5.7.0",
         "react-native-screens": "^4.24.0",
         "react-native-svg": "^15.15.4",
@@ -1564,21 +1564,17 @@
 
     "react-native-gesture-handler": ["react-native-gesture-handler@2.30.0", "", { "dependencies": { "@egjs/hammerjs": "^2.0.17", "hoist-non-react-statics": "^3.3.0", "invariant": "^2.2.4" }, "peerDependencies": { "react": "*", "react-native": "*" } }, "sha512-5YsnKHGa0X9C8lb5oCnKm0fLUPM6CRduvUUw2Bav4RIj/C3HcFh4RIUnF8wgG6JQWCL1//gRx4v+LVWgcIQdGA=="],
 
-    "react-native-is-edge-to-edge": ["react-native-is-edge-to-edge@1.3.1", "", { "peerDependencies": { "react": "*", "react-native": "*" } }, "sha512-NIXU/iT5+ORyCc7p0z2nnlkouYKX425vuU1OEm6bMMtWWR9yvb+Xg5AZmImTKoF9abxCPqrKC3rOZsKzUYgYZA=="],
+    "react-native-is-edge-to-edge": ["react-native-is-edge-to-edge@1.1.7", "", { "peerDependencies": { "react": "*", "react-native": "*" } }, "sha512-EH6i7E8epJGIcu7KpfXYXiV2JFIYITtq+rVS8uEb+92naMRBdxhTuS8Wn2Q7j9sqyO0B+Xbaaf9VdipIAmGW4w=="],
 
-    "react-native-mmkv": ["react-native-mmkv@4.3.0", "", { "peerDependencies": { "react": "*", "react-native": "*", "react-native-nitro-modules": "*" } }, "sha512-D1wB2ViMrm+0rs7FcbLoct/BV+qugASi+XAZT8MzXy5yl0CI0qxToh2LPnw9UENHrNefpfDZgE5FpMhIB37I5Q=="],
+    "react-native-mmkv": ["react-native-mmkv@2.12.2", "", { "peerDependencies": { "react": "*", "react-native": ">=0.71.0" } }, "sha512-6058Aq0p57chPrUutLGe9fYoiDVDNMU2PKV+lLFUJ3GhoHvUrLdsS1PDSCLr00yqzL4WJQ7TTzH+V8cpyrNcfg=="],
 
-    "react-native-nitro-modules": ["react-native-nitro-modules@0.35.2", "", { "peerDependencies": { "react": "*", "react-native": "*" } }, "sha512-97cZcCh3ZAuWAfutel2Q3qLfc45XXh7F9Ei5tEjahP0kV3q8hQelwLIulKXmjN+f0JI5Zf/wCsfwwdVWYU2tKA=="],
-
-    "react-native-reanimated": ["react-native-reanimated@4.2.3", "", { "dependencies": { "react-native-is-edge-to-edge": "^1.2.1", "semver": "^7.7.3" }, "peerDependencies": { "react": "*", "react-native": "0.80 - 0.84", "react-native-worklets": "0.7 - 0.8" } }, "sha512-6e8fFyUSnFVGC8x5s3OR6fdE9ElXb0QTZJO1I9YJ/o13cqPuB0ICouQbEyVGE0jc4j+M9dpiHxLtprz9BJhOCw=="],
+    "react-native-reanimated": ["react-native-reanimated@3.19.5", "", { "dependencies": { "@babel/plugin-transform-arrow-functions": "^7.0.0-0", "@babel/plugin-transform-class-properties": "^7.0.0-0", "@babel/plugin-transform-classes": "^7.0.0-0", "@babel/plugin-transform-nullish-coalescing-operator": "^7.0.0-0", "@babel/plugin-transform-optional-chaining": "^7.0.0-0", "@babel/plugin-transform-shorthand-properties": "^7.0.0-0", "@babel/plugin-transform-template-literals": "^7.0.0-0", "@babel/plugin-transform-unicode-regex": "^7.0.0-0", "@babel/preset-typescript": "^7.16.7", "convert-source-map": "^2.0.0", "invariant": "^2.2.4", "react-native-is-edge-to-edge": "1.1.7" }, "peerDependencies": { "@babel/core": "^7.0.0-0", "react": "*", "react-native": "*" } }, "sha512-bd4AwIkBAaY4BjrgpSoKjEaRG/tXD756F5nGuiH5IMBSKN8tRdUEA8hWZCyIo/R6/kha/tVSoCqodVUACh7ZWw=="],
 
     "react-native-safe-area-context": ["react-native-safe-area-context@5.7.0", "", { "peerDependencies": { "react": "*", "react-native": "*" } }, "sha512-/9/MtQz8ODphjsLdZ+GZAIcC/RtoqW9EeShf7Uvnfgm/pzYrJ75y3PV/J1wuAV1T5Dye5ygq4EAW20RoBq0ABQ=="],
 
     "react-native-screens": ["react-native-screens@4.24.0", "", { "dependencies": { "react-freeze": "^1.0.0", "warn-once": "^0.1.0" }, "peerDependencies": { "react": "*", "react-native": "*" } }, "sha512-SyoiGaDofiyGPFrUkn1oGsAzkRuX1JUvTD9YQQK3G1JGQ5VWkvHgYSsc1K9OrLsDQxN7NmV71O0sHCAh8cBetA=="],
 
     "react-native-svg": ["react-native-svg@15.15.4", "", { "dependencies": { "css-select": "^5.1.0", "css-tree": "^1.1.3", "warn-once": "0.1.1" }, "peerDependencies": { "react": "*", "react-native": "*" } }, "sha512-boT/vIRgj6zZKBpfTPJJiYWMbZE9duBMOwPK6kCSTgxsS947IFMOq9OgIFkpWZTB7t229H24pDRkh3W9ZK/J1A=="],
-
-    "react-native-worklets": ["react-native-worklets@0.8.1", "", { "dependencies": { "@babel/plugin-transform-arrow-functions": "^7.27.1", "@babel/plugin-transform-class-properties": "^7.27.1", "@babel/plugin-transform-classes": "^7.28.4", "@babel/plugin-transform-nullish-coalescing-operator": "^7.27.1", "@babel/plugin-transform-optional-chaining": "^7.27.1", "@babel/plugin-transform-shorthand-properties": "^7.27.1", "@babel/plugin-transform-template-literals": "^7.27.1", "@babel/plugin-transform-unicode-regex": "^7.27.1", "@babel/preset-typescript": "^7.27.1", "convert-source-map": "^2.0.0", "semver": "^7.7.3" }, "peerDependencies": { "@babel/core": "*", "@react-native/metro-config": "*", "react": "*", "react-native": "0.81 - 0.85" } }, "sha512-oWP/lStsAHU6oYCaWDXrda/wOHVdhusQJz1e6x9gPnXdFf4ndNDAOtWCmk2zGrAnlapfyA3rM6PCQq94mPg9cw=="],
 
     "react-navigation": ["react-navigation@5.0.0", "", {}, "sha512-ACTzjc4L1ik7rJ092ZhIELBJ/pnoLgRIqWHSKcYcaBASxyjJCgBEDIV5s585HBj55tw25YwNdlj3+d4B4MYWDg=="],
 
@@ -2175,10 +2171,6 @@
     "react-native/scheduler": ["scheduler@0.24.0-canary-efb381bbf-20230505", "", { "dependencies": { "loose-envify": "^1.1.0" } }, "sha512-ABvovCDe/k9IluqSh4/ISoq8tIJnW8euVAWYt5j/bg6dRnqwQwiGO1F/V4AyK96NGF/FB04FhOUDuWj8IKfABA=="],
 
     "react-native-css-interop/semver": ["semver@7.7.4", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-vFKC2IEtQnVhpT78h1Yp8wzwrf8CM+MzKMHGJZfBtzhZNycRFnXsHk6E5TxIkkMsgNS7mdX3AGB7x2QM2di4lA=="],
-
-    "react-native-reanimated/semver": ["semver@7.7.4", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-vFKC2IEtQnVhpT78h1Yp8wzwrf8CM+MzKMHGJZfBtzhZNycRFnXsHk6E5TxIkkMsgNS7mdX3AGB7x2QM2di4lA=="],
-
-    "react-native-worklets/semver": ["semver@7.7.4", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-vFKC2IEtQnVhpT78h1Yp8wzwrf8CM+MzKMHGJZfBtzhZNycRFnXsHk6E5TxIkkMsgNS7mdX3AGB7x2QM2di4lA=="],
 
     "readable-stream/isarray": ["isarray@1.0.0", "", {}, "sha512-VLghIWNM6ELQzo7zwmcg0NmTVyWKYjvIeM83yjp0wRDTmUnrM678fQbcKBo6n2CJEF0szoG//ytg+TKla89ALQ=="],
 
