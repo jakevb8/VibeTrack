@@ -1,4 +1,4 @@
-import type { VibeType } from '../types';
+import type {VibeType} from '../types';
 
 export const VIBE_COLORS: Record<VibeType, string> = {
   Hype: '#FF3B5C',

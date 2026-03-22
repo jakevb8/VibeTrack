@@ -1,12 +1,14 @@
 // Mock @rnmapbox/maps for Jest
 import React from 'react';
-import { View } from 'react-native';
+import {View} from 'react-native';
 
 const MapboxGL = {
   MapView: (props: Record<string, unknown>) => React.createElement(View, props),
   Camera: () => null,
-  PointAnnotation: (props: Record<string, unknown>) => React.createElement(View, props),
-  ShapeSource: (props: Record<string, unknown>) => React.createElement(View, props),
+  PointAnnotation: (props: Record<string, unknown>) =>
+    React.createElement(View, props),
+  ShapeSource: (props: Record<string, unknown>) =>
+    React.createElement(View, props),
   HeatmapLayer: () => null,
   CircleLayer: () => null,
   setAccessToken: jest.fn(),
@@ -14,7 +16,7 @@ const MapboxGL = {
     Dark: 'mapbox://styles/mapbox/dark-v11',
     Street: 'mapbox://styles/mapbox/streets-v12',
   },
-  UserTrackingMode: { Follow: 'follow' },
+  UserTrackingMode: {Follow: 'follow'},
 };
 
 export default MapboxGL;

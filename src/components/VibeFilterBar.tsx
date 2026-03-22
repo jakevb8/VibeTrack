@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import type { VibeType } from '../types';
-import { ALL_VIBES, VIBE_COLORS } from '../utils/vibeUtils';
+import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import type {VibeType} from '../types';
+import {ALL_VIBES, VIBE_COLORS} from '../utils/vibeUtils';
 
 interface VibeFilterBarProps {
   activeFilters: VibeType[];
@@ -24,12 +24,18 @@ export default function VibeFilterBar({
             onPress={() => onToggle(vibe)}
             style={[
               styles.pill,
-              isActive ? { backgroundColor: color } : styles.pillInactive,
+              isActive ? {backgroundColor: color} : styles.pillInactive,
             ]}
             accessibilityRole="button"
-            accessibilityState={{ selected: isActive }}
-            accessibilityLabel={`${vibe} filter ${isActive ? 'active' : 'inactive'}`}>
-            <Text style={[styles.label, isActive ? styles.labelActive : styles.labelInactive]}>
+            accessibilityState={{selected: isActive}}
+            accessibilityLabel={`${vibe} filter ${
+              isActive ? 'active' : 'inactive'
+            }`}>
+            <Text
+              style={[
+                styles.label,
+                isActive ? styles.labelActive : styles.labelInactive,
+              ]}>
               {vibe}
             </Text>
           </TouchableOpacity>

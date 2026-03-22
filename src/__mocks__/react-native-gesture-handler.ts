@@ -1,15 +1,18 @@
 // Mock react-native-gesture-handler for Jest
 import React from 'react';
-import { View } from 'react-native';
+import {View} from 'react-native';
 import RN from 'react-native';
 
 export const GestureHandlerRootView = View;
-export const PanGestureHandler = ({ children }: { children: React.ReactNode }) =>
+export const PanGestureHandler = ({children}: {children: React.ReactNode}) =>
   React.createElement(View, {}, children);
-export const TapGestureHandler = ({ children }: { children: React.ReactNode }) =>
+export const TapGestureHandler = ({children}: {children: React.ReactNode}) =>
   React.createElement(View, {}, children);
-export const LongPressGestureHandler = ({ children }: { children: React.ReactNode }) =>
-  React.createElement(View, {}, children);
+export const LongPressGestureHandler = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => React.createElement(View, {}, children);
 export const ScrollView = RN.ScrollView;
 export const FlatList = RN.FlatList;
 export const Switch = RN.Switch;

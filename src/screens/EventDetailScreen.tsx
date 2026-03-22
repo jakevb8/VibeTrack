@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, {useCallback} from 'react';
 import {
   View,
   Text,
@@ -8,19 +8,29 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Share,
-  Platform,
 } from 'react-native';
-import { useRoute, useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
-import { MapPin, Clock, Users, Bookmark, BookmarkCheck, Share2 } from 'lucide-react-native';
-import { useVibeStore } from '../store/useVibeStore';
-import { VIBE_COLORS, formatEventTime } from '../utils/vibeUtils';
-import type { RootStackParamList } from '../types';
+import type {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {
+  MapPin,
+  Clock,
+  Users,
+  Bookmark,
+  BookmarkCheck,
+  Share2,
+} from 'lucide-react-native';
+import {useVibeStore} from '../store/useVibeStore';
+import {VIBE_COLORS, formatEventTime} from '../utils/vibeUtils';
+import type {RootStackParamList} from '../types';
 
-type EventDetailScreenProps = NativeStackScreenProps<RootStackParamList, 'EventDetail'>;
+type EventDetailScreenProps = NativeStackScreenProps<
+  RootStackParamList,
+  'EventDetail'
+>;
 
-export default function EventDetailScreen({ route }: EventDetailScreenProps): React.JSX.Element {
-  const { eventId } = route.params;
+export default function EventDetailScreen({
+  route,
+}: EventDetailScreenProps): React.JSX.Element {
+  const {eventId} = route.params;
 
   const events = useVibeStore(s => s.events);
   const savedEvents = useVibeStore(s => s.savedEvents);
@@ -39,7 +49,9 @@ export default function EventDetailScreen({ route }: EventDetailScreenProps): Re
   }, [isSaved, eventId, saveEvent, unsaveEvent]);
 
   const handleShare = useCallback(async () => {
-    if (!event) return;
+    if (!event) {
+      return;
+    }
     try {
       await Share.share({
         title: event.title,
@@ -65,7 +77,7 @@ export default function EventDetailScreen({ route }: EventDetailScreenProps): Re
       <ScrollView bounces contentContainerStyle={styles.scroll}>
         {/* Hero image */}
         <Image
-          source={{ uri: event.imageUrl }}
+          source={{uri: event.imageUrl}}
           style={styles.heroImage}
           resizeMode="cover"
           accessibilityLabel={`Image for ${event.title}`}
@@ -73,7 +85,7 @@ export default function EventDetailScreen({ route }: EventDetailScreenProps): Re
 
         {/* Vibe pill */}
         <View style={styles.vibePillContainer}>
-          <View style={[styles.vibePill, { backgroundColor: vibeColor }]}>
+          <View style={[styles.vibePill, {backgroundColor: vibeColor}]}>
             <Text style={styles.vibeText}>{event.vibe.toUpperCase()}</Text>
           </View>
         </View>
@@ -85,7 +97,9 @@ export default function EventDetailScreen({ route }: EventDetailScreenProps): Re
 
           <View style={styles.metaRow}>
             <Clock color="#9CA3AF" size={16} />
-            <Text style={styles.metaText}>{formatEventTime(event.startTime)}</Text>
+            <Text style={styles.metaText}>
+              {formatEventTime(event.startTime)}
+            </Text>
           </View>
           <View style={styles.metaRow}>
             <MapPin color="#9CA3AF" size={16} />
@@ -104,7 +118,7 @@ export default function EventDetailScreen({ route }: EventDetailScreenProps): Re
       {/* Action bar */}
       <View style={styles.actionBar}>
         <TouchableOpacity
-          style={[styles.saveBtn, isSaved && { backgroundColor: vibeColor }]}
+          style={[styles.saveBtn, isSaved && {backgroundColor: vibeColor}]}
           onPress={handleToggleSave}
           accessibilityRole="button"
           accessibilityLabel={isSaved ? 'Remove from saved' : 'Save event'}
@@ -114,7 +128,9 @@ export default function EventDetailScreen({ route }: EventDetailScreenProps): Re
           ) : (
             <Bookmark color="#F9FAFB" size={20} />
           )}
-          <Text style={styles.saveBtnText}>{isSaved ? 'Saved' : 'Save Event'}</Text>
+          <Text style={styles.saveBtnText}>
+            {isSaved ? 'Saved' : 'Save Event'}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity

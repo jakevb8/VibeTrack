@@ -18,13 +18,13 @@ export interface VibeEvent {
 
 export interface UserState {
   savedEvents: string[];
-  lastLocation: { lat: number; lng: number } | null;
+  lastLocation: {lat: number; lng: number} | null;
   filters: VibeType[];
 }
 
 export type RootStackParamList = {
   Main: undefined;
-  EventDetail: { eventId: string };
+  EventDetail: {eventId: string};
 };
 
 export type MainTabParamList = {

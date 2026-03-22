@@ -1,18 +1,12 @@
-import React, { useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-  StatusBar,
-} from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useVibeStore, selectFilteredEvents } from '../store/useVibeStore';
+import React, {useCallback} from 'react';
+import {View, Text, StyleSheet, SafeAreaView, StatusBar} from 'react-native';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import {useNavigation} from '@react-navigation/native';
+import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {useVibeStore, selectFilteredEvents} from '../store/useVibeStore';
 import SwipeCard from '../components/SwipeCard';
 import VibeFilterBar from '../components/VibeFilterBar';
-import type { RootStackParamList, VibeType } from '../types';
+import type {RootStackParamList, VibeType} from '../types';
 
 type DiscoverNav = NativeStackNavigationProp<RootStackParamList, 'Main'>;
 
@@ -43,7 +37,7 @@ export default function DiscoverScreen(): React.JSX.Element {
 
   const handlePress = useCallback(
     (id: string) => {
-      navigation.navigate('EventDetail', { eventId: id });
+      navigation.navigate('EventDetail', {eventId: id});
     },
     [navigation],
   );
@@ -65,7 +59,10 @@ export default function DiscoverScreen(): React.JSX.Element {
 
         <Text style={styles.heading}>Discover</Text>
 
-        <VibeFilterBar activeFilters={activeFilters} onToggle={handleToggleFilter} />
+        <VibeFilterBar
+          activeFilters={activeFilters}
+          onToggle={handleToggleFilter}
+        />
 
         {isDeckEmpty ? (
           <View style={styles.emptyContainer}>
@@ -90,8 +87,8 @@ export default function DiscoverScreen(): React.JSX.Element {
                     {
                       zIndex: visibleCards.length - stackIdx,
                       transform: [
-                        { scale: 1 - stackIdx * 0.04 },
-                        { translateY: stackIdx * 12 },
+                        {scale: 1 - stackIdx * 0.04},
+                        {translateY: stackIdx * 12},
                       ],
                     },
                   ]}>
@@ -109,7 +106,9 @@ export default function DiscoverScreen(): React.JSX.Element {
         )}
 
         <View style={styles.hint}>
-          <Text style={styles.hintText}>Swipe right to save  •  Swipe left to skip</Text>
+          <Text style={styles.hintText}>
+            Swipe right to save • Swipe left to skip
+          </Text>
         </View>
       </SafeAreaView>
     </GestureHandlerRootView>

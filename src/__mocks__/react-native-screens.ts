@@ -1,6 +1,5 @@
 // Mock react-native-screens to avoid Fabric/codegenNativeComponent errors in Jest
-import React from 'react';
-import { View } from 'react-native';
+import {View} from 'react-native';
 
 export const enableScreens = jest.fn();
 export const Screen = View;

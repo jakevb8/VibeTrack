@@ -1,4 +1,4 @@
-import type { VibeEvent } from '../types';
+import type {VibeEvent} from '../types';
 
 const mockEvents: VibeEvent[] = [
   {
@@ -13,7 +13,8 @@ const mockEvents: VibeEvent[] = [
       address: '420 Mission St, San Francisco, CA',
     },
     vibe: 'Hype',
-    imageUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800',
+    imageUrl:
+      'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800',
     startTime: '2026-03-28T22:00:00Z',
     attendeeCount: 312,
   },
@@ -29,7 +30,8 @@ const mockEvents: VibeEvent[] = [
       address: 'Golden Gate Park, San Francisco, CA',
     },
     vibe: 'Chill',
-    imageUrl: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800',
+    imageUrl:
+      'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800',
     startTime: '2026-03-29T09:00:00Z',
     attendeeCount: 45,
   },
@@ -77,7 +79,8 @@ const mockEvents: VibeEvent[] = [
       address: 'Ocean Beach, San Francisco, CA',
     },
     vibe: 'Hype',
-    imageUrl: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800',
+    imageUrl:
+      'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800',
     startTime: '2026-03-29T20:00:00Z',
     attendeeCount: 1200,
   },
@@ -93,7 +96,8 @@ const mockEvents: VibeEvent[] = [
       address: 'Dolores Park, San Francisco, CA',
     },
     vibe: 'Chill',
-    imageUrl: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800',
+    imageUrl:
+      'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800',
     startTime: '2026-03-30T13:00:00Z',
     attendeeCount: 200,
   },
@@ -105,11 +109,12 @@ const mockEvents: VibeEvent[] = [
       'Learn to throw pots on a wheel in this beginner-friendly two-hour workshop. All materials included.',
     location: {
       latitude: 37.7833,
-      longitude: -122.4090,
+      longitude: -122.409,
       address: '1275 Sansome St, San Francisco, CA',
     },
     vibe: 'Creative',
-    imageUrl: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=800',
+    imageUrl:
+      'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=800',
     startTime: '2026-03-30T10:00:00Z',
     attendeeCount: 12,
   },
@@ -125,7 +130,8 @@ const mockEvents: VibeEvent[] = [
       address: '560 Pacific Ave, San Francisco, CA',
     },
     vibe: 'Social',
-    imageUrl: 'https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?w=800',
+    imageUrl:
+      'https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?w=800',
     startTime: '2026-03-28T19:00:00Z',
     attendeeCount: 35,
   },

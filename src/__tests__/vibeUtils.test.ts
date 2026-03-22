@@ -5,7 +5,7 @@ import {
   clamp,
   isEventSaved,
 } from '../utils/vibeUtils';
-import type { VibeType } from '../../types';
+import type {VibeType} from '../../types';
 
 describe('VIBE_COLORS', () => {
   it('has a colour for every VibeType', () => {
@@ -19,7 +19,9 @@ describe('VIBE_COLORS', () => {
 
 describe('ALL_VIBES', () => {
   it('contains all four vibe types', () => {
-    expect(ALL_VIBES).toEqual(expect.arrayContaining(['Hype', 'Chill', 'Social', 'Creative']));
+    expect(ALL_VIBES).toEqual(
+      expect.arrayContaining(['Hype', 'Chill', 'Social', 'Creative']),
+    );
     expect(ALL_VIBES).toHaveLength(4);
   });
 });

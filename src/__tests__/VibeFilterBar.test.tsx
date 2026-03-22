@@ -1,8 +1,6 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
+import {render, fireEvent} from '@testing-library/react-native';
 import VibeFilterBar from '../components/VibeFilterBar';
-import type { VibeType } from '../types';
-
 describe('VibeFilterBar', () => {
   const mockToggle = jest.fn();
 
@@ -11,7 +9,7 @@ describe('VibeFilterBar', () => {
   });
 
   it('renders all four vibe filters', () => {
-    const { getByTestId } = render(
+    const {getByTestId} = render(
       <VibeFilterBar activeFilters={[]} onToggle={mockToggle} />,
     );
     expect(getByTestId('filter-Hype')).toBeTruthy();
@@ -21,7 +19,7 @@ describe('VibeFilterBar', () => {
   });
 
   it('calls onToggle with the correct vibe when a pill is pressed', () => {
-    const { getByTestId } = render(
+    const {getByTestId} = render(
       <VibeFilterBar activeFilters={[]} onToggle={mockToggle} />,
     );
     fireEvent.press(getByTestId('filter-Hype'));
@@ -29,7 +27,7 @@ describe('VibeFilterBar', () => {
   });
 
   it('calls onToggle once per press', () => {
-    const { getByTestId } = render(
+    const {getByTestId} = render(
       <VibeFilterBar activeFilters={[]} onToggle={mockToggle} />,
     );
     fireEvent.press(getByTestId('filter-Chill'));
@@ -38,7 +36,7 @@ describe('VibeFilterBar', () => {
   });
 
   it('marks the active filter correctly via accessibilityState', () => {
-    const { getByTestId } = render(
+    const {getByTestId} = render(
       <VibeFilterBar activeFilters={['Hype']} onToggle={mockToggle} />,
     );
     const hypeBtn = getByTestId('filter-Hype');

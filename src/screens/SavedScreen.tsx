@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, {useCallback} from 'react';
 import {
   View,
   Text,
@@ -8,12 +8,12 @@ import {
   SafeAreaView,
   Image,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { BookmarkX } from 'lucide-react-native';
-import { useVibeStore, selectSavedEventObjects } from '../store/useVibeStore';
-import type { RootStackParamList, VibeEvent } from '../types';
-import { VIBE_COLORS, formatEventTime } from '../utils/vibeUtils';
+import {useNavigation} from '@react-navigation/native';
+import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {BookmarkX} from 'lucide-react-native';
+import {useVibeStore, selectSavedEventObjects} from '../store/useVibeStore';
+import type {RootStackParamList, VibeEvent} from '../types';
+import {VIBE_COLORS, formatEventTime} from '../utils/vibeUtils';
 
 type SavedNav = NativeStackNavigationProp<RootStackParamList, 'Main'>;
 
@@ -23,7 +23,11 @@ interface SavedEventRowProps {
   onUnsave: (id: string) => void;
 }
 
-function SavedEventRow({ event, onPress, onUnsave }: SavedEventRowProps): React.JSX.Element {
+function SavedEventRow({
+  event,
+  onPress,
+  onUnsave,
+}: SavedEventRowProps): React.JSX.Element {
   const color = VIBE_COLORS[event.vibe];
   return (
     <TouchableOpacity
@@ -32,8 +36,8 @@ function SavedEventRow({ event, onPress, onUnsave }: SavedEventRowProps): React.
       onPress={() => onPress(event.id)}
       accessibilityRole="button"
       accessibilityLabel={`View details for ${event.title}`}>
-      <View style={[styles.vibeAccent, { backgroundColor: color }]} />
-      <Image source={{ uri: event.imageUrl }} style={styles.thumbnail} />
+      <View style={[styles.vibeAccent, {backgroundColor: color}]} />
+      <Image source={{uri: event.imageUrl}} style={styles.thumbnail} />
       <View style={styles.rowInfo}>
         <Text style={styles.rowTitle} numberOfLines={1}>
           {event.title}
@@ -58,7 +62,7 @@ export default function SavedScreen(): React.JSX.Element {
   const unsaveEvent = useVibeStore(s => s.unsaveEvent);
 
   const handlePress = useCallback(
-    (id: string) => navigation.navigate('EventDetail', { eventId: id }),
+    (id: string) => navigation.navigate('EventDetail', {eventId: id}),
     [navigation],
   );
 
@@ -81,7 +85,7 @@ export default function SavedScreen(): React.JSX.Element {
         <FlatList
           data={savedEventObjects}
           keyExtractor={item => item.id}
-          renderItem={({ item }) => (
+          renderItem={({item}) => (
             <SavedEventRow
               event={item}
               onPress={handlePress}

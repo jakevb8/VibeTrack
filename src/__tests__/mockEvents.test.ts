@@ -1,5 +1,5 @@
 import mockEvents from '../data/mockEvents';
-import type { VibeEvent } from '../types';
+import type {VibeEvent} from '../types';
 
 const VALID_VIBES = ['Hype', 'Chill', 'Social', 'Creative'];
 

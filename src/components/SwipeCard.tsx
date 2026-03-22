@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, {useCallback} from 'react';
 import {
   View,
   Text,
@@ -17,11 +17,11 @@ import Animated, {
   interpolate,
   Extrapolate,
 } from 'react-native-reanimated';
-import { PanGestureHandler } from 'react-native-gesture-handler';
-import type { VibeEvent } from '../types';
-import { VIBE_COLORS } from '../utils/vibeUtils';
+import {PanGestureHandler} from 'react-native-gesture-handler';
+import type {VibeEvent} from '../types';
+import {VIBE_COLORS} from '../utils/vibeUtils';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const {width: SCREEN_WIDTH} = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH - 32;
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.35;
 const ROTATION_FACTOR = 15; // degrees at max swipe
@@ -44,12 +44,21 @@ export default function SwipeCard({
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
 
-  const triggerLeft = useCallback(() => onSwipeLeft(event.id), [event.id, onSwipeLeft]);
-  const triggerRight = useCallback(() => onSwipeRight(event.id), [event.id, onSwipeRight]);
-  const triggerPress = useCallback(() => onPress(event.id), [event.id, onPress]);
+  const triggerLeft = useCallback(
+    () => onSwipeLeft(event.id),
+    [event.id, onSwipeLeft],
+  );
+  const triggerRight = useCallback(
+    () => onSwipeRight(event.id),
+    [event.id, onSwipeRight],
+  );
+  const triggerPress = useCallback(
+    () => onPress(event.id),
+    [event.id, onPress],
+  );
 
   const gestureHandler = useAnimatedGestureHandler({
-    onStart: (_evt, ctx: { startX: number; startY: number }) => {
+    onStart: (_evt, ctx: {startX: number; startY: number}) => {
       ctx.startX = translateX.value;
       ctx.startY = translateY.value;
     },
@@ -59,14 +68,14 @@ export default function SwipeCard({
     },
     onEnd: () => {
       if (translateX.value < -SWIPE_THRESHOLD) {
-        translateX.value = withTiming(-SCREEN_WIDTH * 1.5, { duration: 250 });
+        translateX.value = withTiming(-SCREEN_WIDTH * 1.5, {duration: 250});
         runOnJS(triggerLeft)();
       } else if (translateX.value > SWIPE_THRESHOLD) {
-        translateX.value = withTiming(SCREEN_WIDTH * 1.5, { duration: 250 });
+        translateX.value = withTiming(SCREEN_WIDTH * 1.5, {duration: 250});
         runOnJS(triggerRight)();
       } else {
-        translateX.value = withSpring(0, { damping: 15 });
-        translateY.value = withSpring(0, { damping: 15 });
+        translateX.value = withSpring(0, {damping: 15});
+        translateY.value = withSpring(0, {damping: 15});
       }
     },
   });
@@ -80,19 +89,29 @@ export default function SwipeCard({
     );
     return {
       transform: [
-        { translateX: translateX.value },
-        { translateY: translateY.value },
-        { rotate: `${rotate}deg` },
+        {translateX: translateX.value},
+        {translateY: translateY.value},
+        {rotate: `${rotate}deg`},
       ],
     };
   });
 
   const likeOpacity = useAnimatedStyle(() => ({
-    opacity: interpolate(translateX.value, [0, SWIPE_THRESHOLD], [0, 1], Extrapolate.CLAMP),
+    opacity: interpolate(
+      translateX.value,
+      [0, SWIPE_THRESHOLD],
+      [0, 1],
+      Extrapolate.CLAMP,
+    ),
   }));
 
   const passOpacity = useAnimatedStyle(() => ({
-    opacity: interpolate(translateX.value, [-SWIPE_THRESHOLD, 0], [1, 0], Extrapolate.CLAMP),
+    opacity: interpolate(
+      translateX.value,
+      [-SWIPE_THRESHOLD, 0],
+      [1, 0],
+      Extrapolate.CLAMP,
+    ),
   }));
 
   const vibeColor = VIBE_COLORS[event.vibe];
@@ -105,13 +124,12 @@ export default function SwipeCard({
         // Treat tap if swipe was minimal (handled via onPress prop below)
         accessible={true}
         accessibilityRole="button"
-        accessibilityLabel={`${event.title}. Swipe right to save, left to skip.`}
-      >
+        accessibilityLabel={`${event.title}. Swipe right to save, left to skip.`}>
         {/* Vibe colour accent bar */}
-        <View style={[styles.vibeBar, { backgroundColor: vibeColor }]} />
+        <View style={[styles.vibeBar, {backgroundColor: vibeColor}]} />
 
         <Image
-          source={{ uri: event.imageUrl }}
+          source={{uri: event.imageUrl}}
           style={styles.image}
           resizeMode="cover"
         />
@@ -126,7 +144,7 @@ export default function SwipeCard({
 
         {/* Info overlay */}
         <View style={styles.infoContainer}>
-          <View style={[styles.vibePill, { backgroundColor: vibeColor }]}>
+          <View style={[styles.vibePill, {backgroundColor: vibeColor}]}>
             <Text style={styles.vibeText}>{event.vibe.toUpperCase()}</Text>
           </View>
           <Text
@@ -157,7 +175,7 @@ const styles = StyleSheet.create({
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
+        shadowOffset: {width: 0, height: 4},
         shadowOpacity: 0.4,
         shadowRadius: 8,
       },
