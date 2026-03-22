@@ -19,3 +19,38 @@ buildscript {
 }
 
 apply plugin: "com.facebook.react.rootproject"
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url 'https://api.mapbox.com/downloads/v2/releases/maven'
+            authentication {
+                basic(BasicAuthentication)
+            }
+            credentials {
+                // Token comes from ~/.gradle/gradle.properties (local) or
+                // MAPBOX_DOWNLOADS_TOKEN env var (CI). Fall back to empty string
+                // so Gradle does not fail to configure when the prop is absent.
+                username = "mapbox"
+                password = project.hasProperty('MAPBOX_DOWNLOADS_TOKEN')
+                    ? project.property('MAPBOX_DOWNLOADS_TOKEN')
+                    : (System.getenv('MAPBOX_DOWNLOADS_TOKEN') ?: '')
+            }
+        }
+    }
+
+    // Force AndroidX versions that are compatible with compileSdk 34 / AGP 8.2.x
+    configurations.all {
+        resolutionStrategy {
+            force 'androidx.core:core:1.13.1'
+            force 'androidx.core:core-ktx:1.13.1'
+            force 'androidx.transition:transition:1.5.1'
+            force 'androidx.transition:transition-ktx:1.5.1'
+            // Ensure lifecycle-runtime-ktx is present (provides ViewTreeLifecycleOwner)
+            force 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.2'
+            force 'androidx.lifecycle:lifecycle-runtime:2.6.2'
+        }
+    }
+}

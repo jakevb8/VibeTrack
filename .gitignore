@@ -87,3 +87,7 @@ fastlane/report.xml
 fastlane/Preview.html
 ios/fastlane/report.xml
 android/fastlane/report.xml
+
+# Leftover tarballs / extracted npm package dirs from version testing
+*.tgz
+/package/
