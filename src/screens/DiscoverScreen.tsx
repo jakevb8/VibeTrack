@@ -2,6 +2,7 @@ import React, {useCallback} from 'react';
 import {View, Text, StyleSheet, SafeAreaView, StatusBar} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {useShallow} from 'zustand/react/shallow';
 import {useVibeStore, selectFilteredEvents} from '../store/useVibeStore';
 import SwipeCard from '../components/SwipeCard';
 import VibeFilterBar from '../components/VibeFilterBar';
@@ -12,7 +13,7 @@ type DiscoverNav = NativeStackNavigationProp<RootStackParamList, 'Main'>;
 export default function DiscoverScreen(): React.JSX.Element {
   const navigation = useNavigation<DiscoverNav>();
 
-  const filteredEvents = useVibeStore(selectFilteredEvents);
+  const filteredEvents = useVibeStore(useShallow(selectFilteredEvents));
   const currentIndex = useVibeStore(s => s.currentIndex);
   const activeFilters = useVibeStore(s => s.filters);
   const advanceCard = useVibeStore(s => s.advanceCard);

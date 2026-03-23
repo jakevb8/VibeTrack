@@ -11,6 +11,7 @@ import {
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {BookmarkX} from 'lucide-react-native';
+import {useShallow} from 'zustand/react/shallow';
 import {useVibeStore, selectSavedEventObjects} from '../store/useVibeStore';
 import type {RootStackParamList, VibeEvent} from '../types';
 import {VIBE_COLORS, formatEventTime} from '../utils/vibeUtils';
@@ -58,7 +59,7 @@ function SavedEventRow({
 
 export default function SavedScreen(): React.JSX.Element {
   const navigation = useNavigation<SavedNav>();
-  const savedEventObjects = useVibeStore(selectSavedEventObjects);
+  const savedEventObjects = useVibeStore(useShallow(selectSavedEventObjects));
   const unsaveEvent = useVibeStore(s => s.unsaveEvent);
 
   const handlePress = useCallback(
