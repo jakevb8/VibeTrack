@@ -1,6 +1,5 @@
 import React, {useCallback} from 'react';
 import {View, Text, StyleSheet, SafeAreaView, StatusBar} from 'react-native';
-import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useVibeStore, selectFilteredEvents} from '../store/useVibeStore';
@@ -53,8 +52,7 @@ export default function DiscoverScreen(): React.JSX.Element {
   const isDeckEmpty = visibleCards.length === 0;
 
   return (
-    <GestureHandlerRootView style={styles.root}>
-      <SafeAreaView style={styles.container} testID="discover-screen">
+    <SafeAreaView style={styles.container} testID="discover-screen">
         <StatusBar barStyle="light-content" backgroundColor="#111827" />
 
         <Text style={styles.heading}>Discover</Text>
@@ -109,16 +107,12 @@ export default function DiscoverScreen(): React.JSX.Element {
           <Text style={styles.hintText}>
             Swipe right to save • Swipe left to skip
           </Text>
-        </View>
-      </SafeAreaView>
-    </GestureHandlerRootView>
+      </View>
+        </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-  },
   container: {
     flex: 1,
     backgroundColor: '#111827',

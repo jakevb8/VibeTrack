@@ -16,7 +16,13 @@
  *    individual RN 0.74 prefab targets; move find_package before add_library
  * 8. react-native-gesture-handler build.gradle — extend packagingOptions excludes to prevent
  *    duplicate .so conflicts at mergeDebugNativeLibs
- * 9. react-native-svg@15.11.0 — create missing scripts/rnsvg_utils.rb (absent from 15.11.0
+ * 9. react-native-svg@15.11.0 — create missing scripts/rnsvg_utils.rb
+ * 10. react-native-gesture-handler build.gradle — extend packagingOptions excludes
+ * 11. react-native-mmkv createMMKV.js — remove nativeCallSyncHook check that false-triggers
+ *     in Bridgeless/New Architecture mode (nativeCallSyncHook is a Bridge-only global)
+ * 12. react-native-gesture-handler RNGestureHandlerRootView.kt + RNGestureHandlerRootHelper.kt
+ *     — defer rootHelper init via post() AND use reactApplicationContext for getNativeModule
+ *     to avoid CatalystInstance-not-set crash in Bridgeless mode (absent from 15.11.0
  *    npm package but referenced by RNSVG.podspec; backported from 15.12.0)
  */
 
@@ -494,5 +500,204 @@ if (!fs.existsSync(rnsvgUtilsPath)) {
 } else {
   console.log('[postinstall] Already up-to-date: node_modules/react-native-svg/scripts/rnsvg_utils.rb');
 }
+
+// ---------------------------------------------------------------------------
+// 11. react-native-mmkv — fix Bridgeless mode JSI check
+//    In RN New Architecture Bridgeless mode, global.nativeCallSyncHook does not
+//    exist (it is a legacy Bridge concept). MMKV 2.x incorrectly treats its
+//    absence as "not running on-device" and throws. The fix: only check
+//    MMKVModule.install == null (which is the real JSI-unavailable signal).
+//    Patch both commonjs and module builds.
+// ---------------------------------------------------------------------------
+const mmkvBridgelessPatch = [
+  {
+    marker: 'PATCH: Bridgeless mode - skip nativeCallSyncHook check',
+    old: '    // Check if we are running on-device (JSI)\n    if (global.nativeCallSyncHook == null || MMKVModule.install == null) {',
+    replacement: [
+      '    // Check if we are running on-device (JSI)',
+      '    // PATCH: Bridgeless mode - skip nativeCallSyncHook check',
+      '    // In RN New Architecture Bridgeless mode, nativeCallSyncHook does not exist',
+      '    // (legacy Bridge concept). JSI is always available in Bridgeless mode.',
+      '    // We only check MMKVModule.install to determine if JSI is wired up.',
+      '    if (MMKVModule.install == null) {',
+    ].join('\n'),
+  },
+];
+
+patchFile(
+  path.join(NM, 'react-native-mmkv/lib/commonjs/createMMKV.js'),
+  mmkvBridgelessPatch,
+);
+
+patchFile(
+  path.join(NM, 'react-native-mmkv/lib/module/createMMKV.js'),
+  mmkvBridgelessPatch,
+);
+
+// Also patch the TypeScript source so that if anyone rebuilds from source it still works
+patchFile(
+  path.join(NM, 'react-native-mmkv/src/createMMKV.ts'),
+  [
+    {
+      marker: 'PATCH: Bridgeless mode - skip nativeCallSyncHook check',
+      old: '    // Check if we are running on-device (JSI)\n    if (global.nativeCallSyncHook == null || MMKVModule.install == null) {',
+      replacement: [
+        '    // Check if we are running on-device (JSI)',
+        '    // PATCH: Bridgeless mode - skip nativeCallSyncHook check',
+        '    // In RN New Architecture Bridgeless mode, nativeCallSyncHook does not exist (legacy Bridge).',
+        '    if (MMKVModule.install == null) {',
+      ].join('\n'),
+    },
+  ],
+);
+
+// ---------------------------------------------------------------------------
+// 12. react-native-gesture-handler — RNGestureHandlerRootView.kt
+//    In Bridgeless/New Architecture mode, ReactContext.getNativeModule() throws
+//    "Trying to call native module before CatalystInstance has been set!" because
+//    CatalystInstance is never initialized in Bridgeless mode. Guard the
+//    onAttachedToWindow initialization with a post() to defer until the view
+//    is fully attached and the context is ready.
+// ---------------------------------------------------------------------------
+patchFile(
+  path.join(
+    NM,
+    'react-native-gesture-handler/android/src/main/java/com/swmansion/gesturehandler/react/RNGestureHandlerRootView.kt',
+  ),
+  [
+    {
+      marker: 'PATCH: Bridgeless mode - always defer rootHelper init via post()',
+      old: [
+        '  override fun onAttachedToWindow() {',
+        '    super.onAttachedToWindow()',
+        '    rootViewEnabled = unstableForceActive || !hasGestureHandlerEnabledRootView(this)',
+        '    if (!rootViewEnabled) {',
+        '      Log.i(',
+        '        ReactConstants.TAG,',
+        '        "[GESTURE HANDLER] Gesture handler is already enabled for a parent view",',
+        '      )',
+        '    }',
+        '    if (rootViewEnabled && rootHelper == null) {',
+        '      rootHelper = RNGestureHandlerRootHelper(context as ReactContext, this)',
+        '    }',
+        '  }',
+        '',
+        '  fun tearDown() {',
+        '    rootHelper?.tearDown()',
+        '  }',
+        '',
+        '  override fun dispatchTouchEvent(event: MotionEvent) = if (rootViewEnabled && rootHelper!!.dispatchTouchEvent(event)) {',
+        '    true',
+        '  } else {',
+        '    super.dispatchTouchEvent(event)',
+        '  }',
+        '',
+        '  override fun dispatchGenericMotionEvent(ev: MotionEvent) =',
+        '    if (rootViewEnabled && ev.isHoverAction() && rootHelper!!.dispatchTouchEvent(ev)) {',
+        '      true',
+        '    } else {',
+        '      super.dispatchGenericMotionEvent(ev)',
+        '    }',
+        '',
+        '  override fun requestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {',
+        '    if (rootViewEnabled) {',
+        '      rootHelper!!.requestDisallowInterceptTouchEvent()',
+        '    }',
+        '    super.requestDisallowInterceptTouchEvent(disallowIntercept)',
+        '  }',
+      ].join('\n'),
+      replacement: [
+        '  override fun onAttachedToWindow() {',
+        '    super.onAttachedToWindow()',
+        '    rootViewEnabled = unstableForceActive || !hasGestureHandlerEnabledRootView(this)',
+        '    if (!rootViewEnabled) {',
+        '      Log.i(',
+        '        ReactConstants.TAG,',
+        '        "[GESTURE HANDLER] Gesture handler is already enabled for a parent view",',
+        '      )',
+        '    }',
+        '    if (rootViewEnabled && rootHelper == null) {',
+        '      // PATCH: Bridgeless mode - always defer rootHelper init via post()',
+        '      // onAttachedToWindow is called synchronously from Fabric\'s addViewAt during',
+        '      // mount, before the ReactHost/CatalystInstance is ready. getNativeModule()',
+        '      // throws in this context even in Bridgeless mode. Using post() defers to',
+        '      // the next UI frame when the host is fully up.',
+        '      post { initRootHelper() }',
+        '    }',
+        '  }',
+        '',
+        '  private fun initRootHelper() {',
+        '    if (isAttachedToWindow && rootHelper == null && rootViewEnabled) {',
+        '      // PATCH: Bridgeless mode - use ReactApplicationContext for getNativeModule',
+        '      // ThemedReactContext does not override getNativeModule() to delegate to the',
+        '      // BridgelessReactContext, so calling it directly on ThemedReactContext throws',
+        '      // "CatalystInstance has not been set". We must go through reactApplicationContext',
+        '      // which IS BridgelessReactContext and has a working getNativeModule() override.',
+        '      val themedCtx = context as? com.facebook.react.uimanager.ThemedReactContext',
+        '      val reactCtx: ReactContext = themedCtx?.reactApplicationContext ?: (context as ReactContext)',
+        '      rootHelper = RNGestureHandlerRootHelper(reactCtx, this)',
+        '    }',
+        '  }',
+        '',
+        '  fun tearDown() {',
+        '    rootHelper?.tearDown()',
+        '  }',
+        '',
+        '  override fun dispatchTouchEvent(event: MotionEvent) = if (rootViewEnabled && rootHelper?.dispatchTouchEvent(event) == true) {',
+        '    true',
+        '  } else {',
+        '    super.dispatchTouchEvent(event)',
+        '  }',
+        '',
+        '  override fun dispatchGenericMotionEvent(ev: MotionEvent) =',
+        '    if (rootViewEnabled && ev.isHoverAction() && rootHelper?.dispatchTouchEvent(ev) == true) {',
+        '      true',
+        '    } else {',
+        '      super.dispatchGenericMotionEvent(ev)',
+        '    }',
+        '',
+        '  override fun requestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {',
+        '    if (rootViewEnabled) {',
+        '      rootHelper?.requestDisallowInterceptTouchEvent()',
+        '    }',
+        '    super.requestDisallowInterceptTouchEvent(disallowIntercept)',
+        '  }',
+      ].join('\n'),
+    },
+  ],
+);
+
+// ---------------------------------------------------------------------------
+// 13. react-native-gesture-handler — RNGestureHandlerRootHelper.kt
+//    The init block calls context.getNativeModule() where context is a
+//    ThemedReactContext. In Bridgeless mode, ThemedReactContext doesn't override
+//    getNativeModule() to delegate to BridgelessReactContext, so it throws.
+//    Fix: resolve module via reactApplicationContext instead.
+// ---------------------------------------------------------------------------
+patchFile(
+  path.join(
+    NM,
+    'react-native-gesture-handler/android/src/main/java/com/swmansion/gesturehandler/react/RNGestureHandlerRootHelper.kt',
+  ),
+  [
+    {
+      marker: 'PATCH: Bridgeless mode - use reactApplicationContext for getNativeModule',
+      old: [
+        '    val module = context.getNativeModule(RNGestureHandlerModule::class.java)!!',
+        '    val registry = module.registry',
+      ].join('\n'),
+      replacement: [
+        '    // PATCH: Bridgeless mode - use reactApplicationContext for getNativeModule',
+        '    // In Bridgeless/New Architecture mode, ThemedReactContext does not delegate',
+        '    // getNativeModule() to BridgelessReactContext, so it throws "CatalystInstance',
+        '    // has not been set". We must call getNativeModule on reactApplicationContext',
+        '    // (which IS BridgelessReactContext and has a working override).',
+        '    val appContext = if (context is ThemedReactContext) context.reactApplicationContext else context',
+        '    val module = appContext.getNativeModule(RNGestureHandlerModule::class.java)!!',
+        '    val registry = module.registry',
+      ].join('\n'),
+    },
+  ],
+);
 
 console.log('[postinstall] Done.');
