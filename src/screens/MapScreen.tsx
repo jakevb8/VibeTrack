@@ -95,11 +95,21 @@ export async function geocodeLocation(
 export default function MapScreen(): React.JSX.Element {
   const events = useVibeStore(s => s.events);
   const filters = useVibeStore(s => s.filters);
-  const setLocation = useVibeStore(s => s.setLocation);
+  const lastLocation = useVibeStore(s => s.lastLocation);
+  const locationMode = useVibeStore(s => s.locationMode);
+  const setLocationManual = useVibeStore(s => s.setLocationManual);
+  const resetToGps = useVibeStore(s => s.resetToGps);
+  const fetchEvents = useVibeStore(s => s.fetchEvents);
+
+  const defaultCenter: [number, number] = lastLocation
+    ? [lastLocation.lng, lastLocation.lat]
+    : SF_CENTER;
+
   const cameraRef = useRef<MapboxGL.Camera>(null);
   const [mapKey, setMapKey] = useState(0);
   const [mapReady, setMapReady] = useState(false);
-  const [cameraCenter, setCameraCenter] = useState<[number, number]>(SF_CENTER);
+  const [cameraCenter, setCameraCenter] =
+    useState<[number, number]>(defaultCenter);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -127,7 +137,11 @@ export default function MapScreen(): React.JSX.Element {
       if (coords) {
         const [lng, lat] = coords;
         setCameraCenter(coords);
-        setLocation(lat, lng);
+        // Pin to manual mode — events will reload for this location
+        setLocationManual(lat, lng);
+        fetchEvents(lat, lng).catch(() => {
+          /* error handled in store */
+        });
       } else {
         setSearchError('Location not found');
       }
@@ -136,7 +150,14 @@ export default function MapScreen(): React.JSX.Element {
     } finally {
       setIsSearching(false);
     }
-  }, [searchQuery, setLocation]);
+  }, [searchQuery, setLocationManual, fetchEvents]);
+
+  const handleResetToGps = useCallback(() => {
+    resetToGps();
+    setSearchQuery('');
+    setSearchError(null);
+    // Events will be re-fetched by useEventsLoader when locationMode flips to gps
+  }, [resetToGps]);
 
   const filteredEvents =
     filters.length === 0
@@ -174,6 +195,18 @@ export default function MapScreen(): React.JSX.Element {
           )}
         </TouchableOpacity>
       </View>
+
+      {/* "Back to my location" pill — shown when in manual mode */}
+      {locationMode === 'manual' ? (
+        <TouchableOpacity
+          style={styles.gpsResetPill}
+          onPress={handleResetToGps}
+          testID="map-gps-reset"
+          accessibilityLabel="Back to my location"
+          accessibilityRole="button">
+          <Text style={styles.gpsResetText}>Back to my location</Text>
+        </TouchableOpacity>
+      ) : null}
 
       {searchError ? (
         <View style={styles.errorBanner} testID="map-search-error">
@@ -288,6 +321,23 @@ const styles = StyleSheet.create({
     color: '#A855F7',
     fontWeight: '700',
     fontSize: 15,
+  },
+  gpsResetPill: {
+    position: 'absolute',
+    top: 68,
+    alignSelf: 'center',
+    zIndex: 10,
+    backgroundColor: '#1F2937',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#A855F7',
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+  },
+  gpsResetText: {
+    color: '#A855F7',
+    fontSize: 13,
+    fontWeight: '600',
   },
   errorBanner: {
     position: 'absolute',

@@ -5,14 +5,18 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@env$': '<rootDir>/src/__mocks__/env.ts',
     '^react-native-mmkv$': '<rootDir>/src/__mocks__/react-native-mmkv.ts',
-    '^react-native-reanimated$': '<rootDir>/src/__mocks__/react-native-reanimated.js',
+    '^react-native-reanimated$':
+      '<rootDir>/src/__mocks__/react-native-reanimated.js',
     '^react-native-screens$': '<rootDir>/src/__mocks__/react-native-screens.ts',
-    '^react-native-gesture-handler$': '<rootDir>/src/__mocks__/react-native-gesture-handler.ts',
+    '^react-native-gesture-handler$':
+      '<rootDir>/src/__mocks__/react-native-gesture-handler.ts',
     '^@rnmapbox/maps$': '<rootDir>/src/__mocks__/@rnmapbox/maps.ts',
+    '^react-native-geolocation-service$':
+      '<rootDir>/src/__mocks__/react-native-geolocation-service.ts',
     '\\.css$': '<rootDir>/src/__mocks__/fileMock.js',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(react-native|@react-native|@react-navigation|react-native-gesture-handler|nativewind|lucide-react-native|react-native-svg|react-native-screens|react-native-safe-area-context)/)',
+    'node_modules/(?!(react-native|@react-native|@react-navigation|react-native-gesture-handler|nativewind|lucide-react-native|react-native-svg|react-native-screens|react-native-safe-area-context|react-native-geolocation-service)/)',
   ],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
