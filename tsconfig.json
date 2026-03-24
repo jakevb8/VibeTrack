@@ -8,20 +8,16 @@
     "exactOptionalPropertyTypes": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "src/*"
-      ]
+      "@/*": ["src/*"]
     },
-    "types": [
-      "jest",
-      "@testing-library/jest-native"
-    ]
+    "types": ["jest", "node", "@testing-library/jest-native"]
   },
   "include": [
     "src",
     "index.js",
     "App.tsx",
     "__tests__",
+    "src/__tests__",
     "nativewind-env.d.ts"
   ]
 }

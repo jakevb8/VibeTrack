@@ -78,9 +78,9 @@ export const useVibeStore = create<VibeStore>()(
       toggleFilter: (vibe: VibeType) => {
         const {filters} = get();
         if (filters.includes(vibe)) {
-          set({filters: filters.filter(f => f !== vibe)});
+          set({filters: filters.filter(f => f !== vibe), currentIndex: 0});
         } else {
-          set({filters: [...filters, vibe]});
+          set({filters: [...filters, vibe], currentIndex: 0});
         }
       },
 

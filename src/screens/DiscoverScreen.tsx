@@ -54,62 +54,62 @@ export default function DiscoverScreen(): React.JSX.Element {
 
   return (
     <SafeAreaView style={styles.container} testID="discover-screen">
-        <StatusBar barStyle="light-content" backgroundColor="#111827" />
+      <StatusBar barStyle="light-content" backgroundColor="#111827" />
 
-        <Text style={styles.heading}>Discover</Text>
+      <Text style={styles.heading}>Discover</Text>
 
-        <VibeFilterBar
-          activeFilters={activeFilters}
-          onToggle={handleToggleFilter}
-        />
+      <VibeFilterBar
+        activeFilters={activeFilters}
+        onToggle={handleToggleFilter}
+      />
 
-        {isDeckEmpty ? (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyTitle}>All caught up!</Text>
-            <Text style={styles.emptySubtitle}>
-              {activeFilters.length > 0
-                ? 'Try adjusting your filters.'
-                : 'No more events to discover.'}
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.deckContainer}>
-            {/* Render cards in reverse so top card is last (highest z-index) */}
-            {[...visibleCards].reverse().map((event, reversedIdx) => {
-              const stackIdx = visibleCards.length - 1 - reversedIdx;
-              const isTop = stackIdx === 0;
-              return (
-                <View
-                  key={event.id}
-                  style={[
-                    styles.cardWrapper,
-                    {
-                      zIndex: visibleCards.length - stackIdx,
-                      transform: [
-                        {scale: 1 - stackIdx * 0.04},
-                        {translateY: stackIdx * 12},
-                      ],
-                    },
-                  ]}>
-                  <SwipeCard
-                    event={event}
-                    isTop={isTop}
-                    onSwipeLeft={handleSwipeLeft}
-                    onSwipeRight={handleSwipeRight}
-                    onPress={handlePress}
-                  />
-                </View>
-              );
-            })}
-          </View>
-        )}
-
-        <View style={styles.hint}>
-          <Text style={styles.hintText}>
-            Swipe right to save • Swipe left to skip
+      {isDeckEmpty ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyTitle}>All caught up!</Text>
+          <Text style={styles.emptySubtitle}>
+            {activeFilters.length > 0
+              ? 'Try adjusting your filters.'
+              : 'No more events to discover.'}
           </Text>
+        </View>
+      ) : (
+        <View style={styles.deckContainer}>
+          {/* Render cards in reverse so top card is last (highest z-index) */}
+          {[...visibleCards].reverse().map((event, reversedIdx) => {
+            const stackIdx = visibleCards.length - 1 - reversedIdx;
+            const isTop = stackIdx === 0;
+            return (
+              <View
+                key={event.id}
+                style={[
+                  styles.cardWrapper,
+                  {
+                    zIndex: visibleCards.length - stackIdx,
+                    transform: [
+                      {scale: 1 - stackIdx * 0.04},
+                      {translateY: stackIdx * 12},
+                    ],
+                  },
+                ]}>
+                <SwipeCard
+                  event={event}
+                  isTop={isTop}
+                  onSwipeLeft={handleSwipeLeft}
+                  onSwipeRight={handleSwipeRight}
+                  onPress={handlePress}
+                />
+              </View>
+            );
+          })}
+        </View>
+      )}
+
+      <View style={styles.hint}>
+        <Text style={styles.hintText}>
+          Swipe right to save • Swipe left to skip
+        </Text>
       </View>
-        </SafeAreaView>
+    </SafeAreaView>
   );
 }
 
