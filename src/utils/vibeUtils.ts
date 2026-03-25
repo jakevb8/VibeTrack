@@ -1,10 +1,19 @@
 import type {VibeType} from '../types';
+import {Zap, Wind, Users, Palette} from 'lucide-react-native';
+import type {LucideIcon} from 'lucide-react-native';
 
 export const VIBE_COLORS: Record<VibeType, string> = {
   Hype: '#FF3B5C',
   Chill: '#4ECDC4',
   Social: '#FFE66D',
   Creative: '#A855F7',
+};
+
+export const VIBE_ICONS: Record<VibeType, LucideIcon> = {
+  Hype: Zap,
+  Chill: Wind,
+  Social: Users,
+  Creative: Palette,
 };
 
 export const VIBE_LABELS: Record<VibeType, string> = {

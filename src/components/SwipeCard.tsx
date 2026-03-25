@@ -19,7 +19,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import {PanGestureHandler} from 'react-native-gesture-handler';
 import type {VibeEvent} from '../types';
-import {VIBE_COLORS} from '../utils/vibeUtils';
+import {VIBE_COLORS, VIBE_ICONS} from '../utils/vibeUtils';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH - 32;
@@ -115,6 +115,7 @@ export default function SwipeCard({
   }));
 
   const vibeColor = VIBE_COLORS[event.vibe];
+  const VibeIcon = VIBE_ICONS[event.vibe];
 
   return (
     <PanGestureHandler onGestureEvent={gestureHandler} enabled={isTop}>
@@ -145,6 +146,7 @@ export default function SwipeCard({
         {/* Info overlay */}
         <View style={styles.infoContainer}>
           <View style={[styles.vibePill, {backgroundColor: vibeColor}]}>
+            <VibeIcon size={11} color="#fff" strokeWidth={2.5} />
             <Text style={styles.vibeText}>{event.vibe.toUpperCase()}</Text>
           </View>
           <Text
@@ -221,6 +223,9 @@ const styles = StyleSheet.create({
   },
   vibePill: {
     alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 20,

@@ -1,5 +1,12 @@
 import React, {useCallback} from 'react';
-import {View, Text, StyleSheet, SafeAreaView, StatusBar} from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  StatusBar,
+  ActivityIndicator,
+} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useShallow} from 'zustand/react/shallow';
@@ -19,6 +26,8 @@ export default function DiscoverScreen(): React.JSX.Element {
   const advanceCard = useVibeStore(s => s.advanceCard);
   const saveEvent = useVibeStore(s => s.saveEvent);
   const toggleFilter = useVibeStore(s => s.toggleFilter);
+  const isLoading = useVibeStore(s => s.isLoading);
+  const eventsError = useVibeStore(s => s.eventsError);
 
   const handleSwipeLeft = useCallback(
     (_id: string) => {
@@ -63,7 +72,18 @@ export default function DiscoverScreen(): React.JSX.Element {
         onToggle={handleToggleFilter}
       />
 
-      {isDeckEmpty ? (
+      {isLoading ? (
+        <View style={styles.statusContainer} testID="discover-loading">
+          <ActivityIndicator size="large" color="#A855F7" />
+          <Text style={styles.statusText}>Finding events near you…</Text>
+        </View>
+      ) : eventsError ? (
+        <View style={styles.statusContainer} testID="discover-error">
+          <Text style={styles.errorIcon}>!</Text>
+          <Text style={styles.errorTitle}>Couldn't load events</Text>
+          <Text style={styles.statusText}>{eventsError}</Text>
+        </View>
+      ) : isDeckEmpty ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyTitle}>All caught up!</Text>
           <Text style={styles.emptySubtitle}>
@@ -153,6 +173,28 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     fontSize: 16,
     textAlign: 'center',
+  },
+  statusContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+    gap: 12,
+  },
+  statusText: {
+    color: '#6B7280',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  errorIcon: {
+    color: '#F87171',
+    fontSize: 36,
+    fontWeight: '800',
+  },
+  errorTitle: {
+    color: '#F9FAFB',
+    fontSize: 20,
+    fontWeight: '700',
   },
   hint: {
     paddingBottom: 16,

@@ -1,4 +1,4 @@
-import React, {useRef, useState, useCallback} from 'react';
+import React, {useRef, useState, useCallback, useMemo} from 'react';
 import {
   View,
   StyleSheet,
@@ -106,23 +106,31 @@ export default function MapScreen(): React.JSX.Element {
     : SF_CENTER;
 
   const cameraRef = useRef<MapboxGL.Camera>(null);
-  const [mapKey, setMapKey] = useState(0);
   const [mapReady, setMapReady] = useState(false);
   const [cameraCenter, setCameraCenter] =
     useState<[number, number]>(defaultCenter);
+  const [zoomLevel, setZoomLevel] = useState(12);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  // Each time the tab is focused, force MapView to fully remount by incrementing
-  // the key. This avoids stale native GL surface state after Android destroys it.
+  // Each time the tab is focused, snap the camera back to the current center
+  // without remounting the MapView (avoids ViewTagResolver errors from
+  // tearing down PointAnnotation native views mid-render).
   useFocusEffect(
     useCallback(() => {
-      setMapKey(k => k + 1);
       setMapReady(false);
-    }, []),
+      cameraRef.current?.setCamera({
+        centerCoordinate: cameraCenter,
+        zoomLevel,
+        animationDuration: 0,
+      });
+      // Small delay to let the GL surface reattach before we mark ready
+      const t = setTimeout(() => setMapReady(true), 100);
+      return () => clearTimeout(t);
+    }, [cameraCenter, zoomLevel]),
   );
 
   const handleSearch = useCallback(async () => {
@@ -159,10 +167,29 @@ export default function MapScreen(): React.JSX.Element {
     // Events will be re-fetched by useEventsLoader when locationMode flips to gps
   }, [resetToGps]);
 
-  const filteredEvents =
-    filters.length === 0
-      ? events
-      : events.filter(e => filters.includes(e.vibe));
+  const handleZoomIn = useCallback(() => {
+    setZoomLevel(z => {
+      const next = Math.min(z + 1, 20);
+      cameraRef.current?.setCamera({zoomLevel: next, animationDuration: 200});
+      return next;
+    });
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    setZoomLevel(z => {
+      const next = Math.max(z - 1, 1);
+      cameraRef.current?.setCamera({zoomLevel: next, animationDuration: 200});
+      return next;
+    });
+  }, []);
+
+  const filteredEvents = useMemo(
+    () =>
+      filters.length === 0
+        ? events
+        : events.filter(e => filters.includes(e.vibe)),
+    [events, filters],
+  );
 
   const featureCollection = buildHeatmapFeatureCollection(filteredEvents);
 
@@ -215,7 +242,6 @@ export default function MapScreen(): React.JSX.Element {
       ) : null}
 
       <MapboxGL.MapView
-        key={mapKey}
         style={styles.map}
         styleURL={MapboxGL.StyleURL.Dark}
         compassEnabled
@@ -224,7 +250,7 @@ export default function MapScreen(): React.JSX.Element {
         onDidFinishLoadingMap={() => setMapReady(true)}>
         <MapboxGL.Camera
           ref={cameraRef}
-          zoomLevel={12}
+          zoomLevel={zoomLevel}
           centerCoordinate={cameraCenter}
           animationMode={mapReady ? 'flyTo' : 'none'}
           animationDuration={mapReady ? 1000 : 0}
@@ -271,6 +297,27 @@ export default function MapScreen(): React.JSX.Element {
           </MapboxGL.PointAnnotation>
         ))}
       </MapboxGL.MapView>
+
+      {/* Zoom controls */}
+      <View style={styles.zoomControls}>
+        <TouchableOpacity
+          style={styles.zoomButton}
+          onPress={handleZoomIn}
+          accessibilityLabel="Zoom in"
+          accessibilityRole="button"
+          testID="map-zoom-in">
+          <Text style={styles.zoomButtonText}>+</Text>
+        </TouchableOpacity>
+        <View style={styles.zoomDivider} />
+        <TouchableOpacity
+          style={styles.zoomButton}
+          onPress={handleZoomOut}
+          accessibilityLabel="Zoom out"
+          accessibilityRole="button"
+          testID="map-zoom-out">
+          <Text style={styles.zoomButtonText}>−</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -367,5 +414,37 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 2,
     borderColor: '#fff',
+  },
+  zoomControls: {
+    position: 'absolute',
+    bottom: 40,
+    right: 16,
+    zIndex: 10,
+    backgroundColor: '#1F2937',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#374151',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 6,
+  },
+  zoomButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  zoomButtonText: {
+    color: '#F9FAFB',
+    fontSize: 22,
+    fontWeight: '400',
+    lineHeight: 26,
+  },
+  zoomDivider: {
+    height: 1,
+    backgroundColor: '#374151',
   },
 });

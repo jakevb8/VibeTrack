@@ -1,7 +1,7 @@
 import React from 'react';
 import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import type {VibeType} from '../types';
-import {ALL_VIBES, VIBE_COLORS} from '../utils/vibeUtils';
+import {ALL_VIBES, VIBE_COLORS, VIBE_ICONS} from '../utils/vibeUtils';
 
 interface VibeFilterBarProps {
   activeFilters: VibeType[];
@@ -17,6 +17,7 @@ export default function VibeFilterBar({
       {ALL_VIBES.map(vibe => {
         const isActive = activeFilters.includes(vibe);
         const color = VIBE_COLORS[vibe];
+        const Icon = VIBE_ICONS[vibe];
         return (
           <TouchableOpacity
             key={vibe}
@@ -31,6 +32,11 @@ export default function VibeFilterBar({
             accessibilityLabel={`${vibe} filter ${
               isActive ? 'active' : 'inactive'
             }`}>
+            <Icon
+              size={13}
+              color={isActive ? '#fff' : '#9CA3AF'}
+              strokeWidth={2.5}
+            />
             <Text
               style={[
                 styles.label,
@@ -53,7 +59,10 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   pill: {
-    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 20,
   },

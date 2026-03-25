@@ -19,7 +19,7 @@ import {
   Share2,
 } from 'lucide-react-native';
 import {useVibeStore} from '../store/useVibeStore';
-import {VIBE_COLORS, formatEventTime} from '../utils/vibeUtils';
+import {VIBE_COLORS, VIBE_ICONS, formatEventTime} from '../utils/vibeUtils';
 import type {RootStackParamList} from '../types';
 
 type EventDetailScreenProps = NativeStackScreenProps<
@@ -71,6 +71,7 @@ export default function EventDetailScreen({
   }
 
   const vibeColor = VIBE_COLORS[event.vibe];
+  const VibeIcon = VIBE_ICONS[event.vibe];
 
   return (
     <SafeAreaView style={styles.container} testID="event-detail-screen">
@@ -86,6 +87,7 @@ export default function EventDetailScreen({
         {/* Vibe pill */}
         <View style={styles.vibePillContainer}>
           <View style={[styles.vibePill, {backgroundColor: vibeColor}]}>
+            <VibeIcon size={12} color="#fff" strokeWidth={2.5} />
             <Text style={styles.vibeText}>{event.vibe.toUpperCase()}</Text>
           </View>
         </View>
@@ -164,6 +166,9 @@ const styles = StyleSheet.create({
     left: 16,
   },
   vibePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 20,

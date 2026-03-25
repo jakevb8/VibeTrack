@@ -50,13 +50,15 @@ function patchFile(filePath, patches) {
   let content = fs.readFileSync(filePath, 'utf8');
   let changed = false;
 
-  for (const { marker, old: oldStr, replacement } of patches) {
+  for (const {marker, old: oldStr, replacement} of patches) {
     if (content.includes(marker)) {
       // already patched — skip this patch
       continue;
     }
     if (!content.includes(oldStr)) {
-      console.warn('[postinstall] WARNING: Expected text not found in ' + label);
+      console.warn(
+        '[postinstall] WARNING: Expected text not found in ' + label,
+      );
       console.warn('  Pattern: ' + JSON.stringify(oldStr.slice(0, 80)));
       continue;
     }
@@ -75,21 +77,18 @@ function patchFile(filePath, patches) {
 // ---------------------------------------------------------------------------
 // 1. @rnmapbox/maps — build.gradle: add lifecycle-runtime-ktx
 // ---------------------------------------------------------------------------
-patchFile(
-  path.join(NM, '@rnmapbox/maps/android/build.gradle'),
-  [
-    {
-      marker: 'lifecycle-runtime-ktx-patch-applied',
-      old: "            implementation 'androidx.asynclayoutinflater:asynclayoutinflater:1.0.0'",
-      replacement: [
-        "            implementation 'androidx.asynclayoutinflater:asynclayoutinflater:1.0.0'",
-        '            // PATCH(postinstall): lifecycle-runtime-ktx-patch-applied',
-        '            // ViewTreeLifecycleOwner requires lifecycle-runtime-ktx at compile time.',
-        "            implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.2'",
-      ].join('\n'),
-    },
-  ],
-);
+patchFile(path.join(NM, '@rnmapbox/maps/android/build.gradle'), [
+  {
+    marker: 'lifecycle-runtime-ktx-patch-applied',
+    old: "            implementation 'androidx.asynclayoutinflater:asynclayoutinflater:1.0.0'",
+    replacement: [
+      "            implementation 'androidx.asynclayoutinflater:asynclayoutinflater:1.0.0'",
+      '            // PATCH(postinstall): lifecycle-runtime-ktx-patch-applied',
+      '            // ViewTreeLifecycleOwner requires lifecycle-runtime-ktx at compile time.',
+      "            implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.2'",
+    ].join('\n'),
+  },
+]);
 
 // ---------------------------------------------------------------------------
 // 2. @rnmapbox/maps — RNMBXMapView.kt: remove ViewTreeLifecycleOwner, fix lifecycle
@@ -137,27 +136,24 @@ patchFile(
 // ---------------------------------------------------------------------------
 // 3. react-native-screens — CMakeLists.txt: remove missing RN 0.74 targets
 // ---------------------------------------------------------------------------
-patchFile(
-  path.join(NM, 'react-native-screens/android/CMakeLists.txt'),
-  [
-    {
-      marker: 'react_render_consistency, react_performance_timeline',
-      old: [
-        '                ReactAndroid::react_render_componentregistry',
-        '                ReactAndroid::react_render_consistency',
-        '                ReactAndroid::react_performance_timeline',
-        '                ReactAndroid::react_render_observers_events',
-        '                fbjni::fbjni',
-      ].join('\n'),
-      replacement: [
-        '                ReactAndroid::react_render_componentregistry',
-        '                # react_render_consistency, react_performance_timeline, react_render_observers_events',
-        '                # do not exist in RN 0.74 prefab — removed for RN 0.74 compatibility',
-        '                fbjni::fbjni',
-      ].join('\n'),
-    },
-  ],
-);
+patchFile(path.join(NM, 'react-native-screens/android/CMakeLists.txt'), [
+  {
+    marker: 'react_render_consistency, react_performance_timeline',
+    old: [
+      '                ReactAndroid::react_render_componentregistry',
+      '                ReactAndroid::react_render_consistency',
+      '                ReactAndroid::react_performance_timeline',
+      '                ReactAndroid::react_render_observers_events',
+      '                fbjni::fbjni',
+    ].join('\n'),
+    replacement: [
+      '                ReactAndroid::react_render_componentregistry',
+      '                # react_render_consistency, react_performance_timeline, react_render_observers_events',
+      '                # do not exist in RN 0.74 prefab — removed for RN 0.74 compatibility',
+      '                fbjni::fbjni',
+    ].join('\n'),
+  },
+]);
 
 // ---------------------------------------------------------------------------
 // 4. react-native-screens — RNSScreenShadowNode.h: fix getContentOriginOffset bool param
@@ -169,7 +165,8 @@ patchFile(
   ),
   [
     {
-      marker: 'PATCH: RN 0.74 base class has getContentOriginOffset() without bool param.',
+      marker:
+        'PATCH: RN 0.74 base class has getContentOriginOffset() without bool param.',
       old: '  Point getContentOriginOffset(bool includeTransform) const override;',
       replacement: [
         '  // PATCH: RN 0.74 base class has getContentOriginOffset() without bool param.',
@@ -210,7 +207,8 @@ patchFile(
   ),
   [
     {
-      marker: 'PATCH: RN 0.74 base class has getContentOriginOffset() without bool param.',
+      marker:
+        'PATCH: RN 0.74 base class has getContentOriginOffset() without bool param.',
       old: '  Point getContentOriginOffset(bool includeTransform) const override;',
       replacement: [
         '  // PATCH: RN 0.74 base class has getContentOriginOffset() without bool param.',
@@ -252,7 +250,7 @@ patchFile(
   [
     {
       // Remove 6th template arg (false) in class declaration
-      marker: 'PATCH: RN 0.74\'s ConcreteShadowNode takes 5 template args',
+      marker: "PATCH: RN 0.74's ConcreteShadowNode takes 5 template args",
       old: [
         'class RNSVGConcreteShadowNode : public ConcreteShadowNode<',
         '                                    concreteComponentName,',
@@ -263,7 +261,7 @@ patchFile(
         '                                    false> {',
       ].join('\n'),
       replacement: [
-        '// PATCH: RN 0.74\'s ConcreteShadowNode takes 5 template args (no 6th bool).',
+        "// PATCH: RN 0.74's ConcreteShadowNode takes 5 template args (no 6th bool).",
         '// The 6th arg was added in RN 0.75+. Reverted for RN 0.74 compatibility.',
         'class RNSVGConcreteShadowNode : public ConcreteShadowNode<',
         '                                    concreteComponentName,',
@@ -296,11 +294,12 @@ patchFile(
       ].join('\n'),
     },
     {
-      marker: 'PATCH: canBeTouchTarget/canChildrenBeTouchTarget are not virtual in RN 0.74',
+      marker:
+        'PATCH: canBeTouchTarget/canChildrenBeTouchTarget are not virtual in RN 0.74',
       old: '  bool canBeTouchTarget() const override {',
       replacement: [
         '  // PATCH: canBeTouchTarget/canChildrenBeTouchTarget are not virtual in RN 0.74',
-        '  // (added in RN 0.75+). Removed \'override\' to allow compilation.',
+        "  // (added in RN 0.75+). Removed 'override' to allow compilation.",
         '  bool canBeTouchTarget() const {',
       ].join('\n'),
     },
@@ -406,46 +405,43 @@ patchFile(
 // ---------------------------------------------------------------------------
 // 10. react-native-gesture-handler — build.gradle: extend packagingOptions excludes
 // ---------------------------------------------------------------------------
-patchFile(
-  path.join(NM, 'react-native-gesture-handler/android/build.gradle'),
-  [
-    {
-      marker: 'libreactnativejni.so',
-      old: [
-        '    packagingOptions {',
-        '        // For some reason gradle only complains about the duplicated version of libreact_render libraries',
-        '        // while there are more libraries copied in intermediates folder of the lib build directory, we exclude',
-        '        // only the ones that make the build fail (ideally we should only include libgesturehandler but we',
-        '        // are only allowed to specify exclude patterns)',
-        '        exclude "**/libreact_render*.so"',
-        '        exclude "**/libreactnative.so"',
-        '        exclude "**/libjsi.so"',
-        '        exclude "**/libc++_shared.so"',
-        '        exclude "**/libfbjni.so"',
-        '    }',
-      ].join('\n'),
-      replacement: [
-        '    packagingOptions {',
-        '        // For some reason gradle only complains about the duplicated version of libreact_render libraries',
-        '        // while there are more libraries copied in intermediates folder of the lib build directory, we exclude',
-        '        // only the ones that make the build fail (ideally we should only include libgesturehandler but we',
-        '        // are only allowed to specify exclude patterns)',
-        '        exclude "**/libreact_render*.so"',
-        '        exclude "**/libreactnative.so"',
-        '        // PATCH: RN 0.74 — exclude additional framework SOs to prevent duplicate conflicts',
-        '        exclude "**/libreactnativejni.so"',
-        '        exclude "**/libfolly_runtime.so"',
-        '        exclude "**/libglog.so"',
-        '        exclude "**/libreact_debug.so"',
-        '        exclude "**/libreact_utils.so"',
-        '        exclude "**/libjsi.so"',
-        '        exclude "**/libc++_shared.so"',
-        '        exclude "**/libfbjni.so"',
-        '    }',
-      ].join('\n'),
-    },
-  ],
-);
+patchFile(path.join(NM, 'react-native-gesture-handler/android/build.gradle'), [
+  {
+    marker: 'libreactnativejni.so',
+    old: [
+      '    packagingOptions {',
+      '        // For some reason gradle only complains about the duplicated version of libreact_render libraries',
+      '        // while there are more libraries copied in intermediates folder of the lib build directory, we exclude',
+      '        // only the ones that make the build fail (ideally we should only include libgesturehandler but we',
+      '        // are only allowed to specify exclude patterns)',
+      '        exclude "**/libreact_render*.so"',
+      '        exclude "**/libreactnative.so"',
+      '        exclude "**/libjsi.so"',
+      '        exclude "**/libc++_shared.so"',
+      '        exclude "**/libfbjni.so"',
+      '    }',
+    ].join('\n'),
+    replacement: [
+      '    packagingOptions {',
+      '        // For some reason gradle only complains about the duplicated version of libreact_render libraries',
+      '        // while there are more libraries copied in intermediates folder of the lib build directory, we exclude',
+      '        // only the ones that make the build fail (ideally we should only include libgesturehandler but we',
+      '        // are only allowed to specify exclude patterns)',
+      '        exclude "**/libreact_render*.so"',
+      '        exclude "**/libreactnative.so"',
+      '        // PATCH: RN 0.74 — exclude additional framework SOs to prevent duplicate conflicts',
+      '        exclude "**/libreactnativejni.so"',
+      '        exclude "**/libfolly_runtime.so"',
+      '        exclude "**/libglog.so"',
+      '        exclude "**/libreact_debug.so"',
+      '        exclude "**/libreact_utils.so"',
+      '        exclude "**/libjsi.so"',
+      '        exclude "**/libc++_shared.so"',
+      '        exclude "**/libfbjni.so"',
+      '    }',
+    ].join('\n'),
+  },
+]);
 
 // ---------------------------------------------------------------------------
 // 9. react-native-svg@15.11.0 — create missing scripts/rnsvg_utils.rb
@@ -494,11 +490,15 @@ end
 `;
 
 if (!fs.existsSync(rnsvgUtilsPath)) {
-  fs.mkdirSync(path.dirname(rnsvgUtilsPath), { recursive: true });
+  fs.mkdirSync(path.dirname(rnsvgUtilsPath), {recursive: true});
   fs.writeFileSync(rnsvgUtilsPath, rnsvgUtilsContent, 'utf8');
-  console.log('[postinstall] Created: node_modules/react-native-svg/scripts/rnsvg_utils.rb');
+  console.log(
+    '[postinstall] Created: node_modules/react-native-svg/scripts/rnsvg_utils.rb',
+  );
 } else {
-  console.log('[postinstall] Already up-to-date: node_modules/react-native-svg/scripts/rnsvg_utils.rb');
+  console.log(
+    '[postinstall] Already up-to-date: node_modules/react-native-svg/scripts/rnsvg_utils.rb',
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -535,21 +535,18 @@ patchFile(
 );
 
 // Also patch the TypeScript source so that if anyone rebuilds from source it still works
-patchFile(
-  path.join(NM, 'react-native-mmkv/src/createMMKV.ts'),
-  [
-    {
-      marker: 'PATCH: Bridgeless mode - skip nativeCallSyncHook check',
-      old: '    // Check if we are running on-device (JSI)\n    if (global.nativeCallSyncHook == null || MMKVModule.install == null) {',
-      replacement: [
-        '    // Check if we are running on-device (JSI)',
-        '    // PATCH: Bridgeless mode - skip nativeCallSyncHook check',
-        '    // In RN New Architecture Bridgeless mode, nativeCallSyncHook does not exist (legacy Bridge).',
-        '    if (MMKVModule.install == null) {',
-      ].join('\n'),
-    },
-  ],
-);
+patchFile(path.join(NM, 'react-native-mmkv/src/createMMKV.ts'), [
+  {
+    marker: 'PATCH: Bridgeless mode - skip nativeCallSyncHook check',
+    old: '    // Check if we are running on-device (JSI)\n    if (global.nativeCallSyncHook == null || MMKVModule.install == null) {',
+    replacement: [
+      '    // Check if we are running on-device (JSI)',
+      '    // PATCH: Bridgeless mode - skip nativeCallSyncHook check',
+      '    // In RN New Architecture Bridgeless mode, nativeCallSyncHook does not exist (legacy Bridge).',
+      '    if (MMKVModule.install == null) {',
+    ].join('\n'),
+  },
+]);
 
 // ---------------------------------------------------------------------------
 // 12. react-native-gesture-handler — RNGestureHandlerRootView.kt
@@ -566,7 +563,8 @@ patchFile(
   ),
   [
     {
-      marker: 'PATCH: Bridgeless mode - always defer rootHelper init via post()',
+      marker:
+        'PATCH: Bridgeless mode - always defer rootHelper init via post()',
       old: [
         '  override fun onAttachedToWindow() {',
         '    super.onAttachedToWindow()',
@@ -618,7 +616,7 @@ patchFile(
         '    }',
         '    if (rootViewEnabled && rootHelper == null) {',
         '      // PATCH: Bridgeless mode - always defer rootHelper init via post()',
-        '      // onAttachedToWindow is called synchronously from Fabric\'s addViewAt during',
+        "      // onAttachedToWindow is called synchronously from Fabric's addViewAt during",
         '      // mount, before the ReactHost/CatalystInstance is ready. getNativeModule()',
         '      // throws in this context even in Bridgeless mode. Using post() defers to',
         '      // the next UI frame when the host is fully up.',
@@ -681,7 +679,8 @@ patchFile(
   ),
   [
     {
-      marker: 'PATCH: Bridgeless mode - use reactApplicationContext for getNativeModule',
+      marker:
+        'PATCH: Bridgeless mode - use reactApplicationContext for getNativeModule',
       old: [
         '    val module = context.getNativeModule(RNGestureHandlerModule::class.java)!!',
         '    val registry = module.registry',
