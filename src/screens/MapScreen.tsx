@@ -106,31 +106,45 @@ export default function MapScreen(): React.JSX.Element {
     : SF_CENTER;
 
   const cameraRef = useRef<MapboxGL.Camera>(null);
-  const [mapReady, setMapReady] = useState(false);
-  const [cameraCenter, setCameraCenter] =
-    useState<[number, number]>(defaultCenter);
-  const [zoomLevel, setZoomLevel] = useState(12);
+
+  // The desired camera position is tracked in refs, not state, so that
+  // changes to it never trigger a re-render that might push a prop-driven
+  // camera update onto a surface that isn't ready yet.
+  const cameraCenterRef = useRef<[number, number]>(defaultCenter);
+  const zoomLevelRef = useRef<number>(12);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  // Each time the tab is focused, snap the camera back to the current center
-  // without remounting the MapView (avoids ViewTagResolver errors from
-  // tearing down PointAnnotation native views mid-render).
+  // Imperatively move the camera to the current desired position.
+  // This is the ONLY place we call setCamera — always after the map has
+  // signalled it is ready, never from props.
+  const applyCameraPosition = useCallback((animated: boolean) => {
+    cameraRef.current?.setCamera({
+      centerCoordinate: cameraCenterRef.current,
+      zoomLevel: zoomLevelRef.current,
+      animationMode: animated ? 'flyTo' : 'none',
+      animationDuration: animated ? 1000 : 0,
+    });
+  }, []);
+
+  // Called by Mapbox when the GL surface finishes loading its style — both on
+  // first mount AND every time the surface is recreated (e.g. app returning
+  // from background).  This is the authoritative "map is ready" signal.
+  const handleMapLoaded = useCallback(() => {
+    applyCameraPosition(false);
+  }, [applyCameraPosition]);
+
+  // On tab focus, nudge the camera back.  If the map surface is mid-load
+  // (e.g. app just returned from background) this is a safe no-op because
+  // handleMapLoaded will fire and position the camera once the surface is up.
   useFocusEffect(
     useCallback(() => {
-      setMapReady(false);
-      cameraRef.current?.setCamera({
-        centerCoordinate: cameraCenter,
-        zoomLevel,
-        animationDuration: 0,
-      });
-      // Small delay to let the GL surface reattach before we mark ready
-      const t = setTimeout(() => setMapReady(true), 100);
-      return () => clearTimeout(t);
-    }, [cameraCenter, zoomLevel]),
+      applyCameraPosition(false);
+    }, [applyCameraPosition]),
   );
 
   const handleSearch = useCallback(async () => {
@@ -144,12 +158,12 @@ export default function MapScreen(): React.JSX.Element {
       const coords = await geocodeLocation(trimmed, MAPBOX_ACCESS_TOKEN);
       if (coords) {
         const [lng, lat] = coords;
-        setCameraCenter(coords);
-        // Pin to manual mode — events will reload for this location
+        cameraCenterRef.current = coords;
         setLocationManual(lat, lng);
         fetchEvents(lat, lng).catch(() => {
           /* error handled in store */
         });
+        applyCameraPosition(true);
       } else {
         setSearchError('Location not found');
       }
@@ -158,29 +172,24 @@ export default function MapScreen(): React.JSX.Element {
     } finally {
       setIsSearching(false);
     }
-  }, [searchQuery, setLocationManual, fetchEvents]);
+  }, [searchQuery, setLocationManual, fetchEvents, applyCameraPosition]);
 
   const handleResetToGps = useCallback(() => {
     resetToGps();
     setSearchQuery('');
     setSearchError(null);
-    // Events will be re-fetched by useEventsLoader when locationMode flips to gps
   }, [resetToGps]);
 
   const handleZoomIn = useCallback(() => {
-    setZoomLevel(z => {
-      const next = Math.min(z + 1, 20);
-      cameraRef.current?.setCamera({zoomLevel: next, animationDuration: 200});
-      return next;
-    });
+    const next = Math.min(zoomLevelRef.current + 1, 20);
+    zoomLevelRef.current = next;
+    cameraRef.current?.setCamera({zoomLevel: next, animationDuration: 200});
   }, []);
 
   const handleZoomOut = useCallback(() => {
-    setZoomLevel(z => {
-      const next = Math.max(z - 1, 1);
-      cameraRef.current?.setCamera({zoomLevel: next, animationDuration: 200});
-      return next;
-    });
+    const next = Math.max(zoomLevelRef.current - 1, 1);
+    zoomLevelRef.current = next;
+    cameraRef.current?.setCamera({zoomLevel: next, animationDuration: 200});
   }, []);
 
   const filteredEvents = useMemo(
@@ -192,6 +201,18 @@ export default function MapScreen(): React.JSX.Element {
   );
 
   const featureCollection = buildHeatmapFeatureCollection(filteredEvents);
+
+  // ShapeSource onPress replaces PointAnnotation — avoids per-event native
+  // view creation which caused ViewTagResolver errors on surface teardown.
+  const handleShapePress = useCallback(
+    (e: {features?: {properties?: {id?: string} | null}[]}) => {
+      const id = e?.features?.[0]?.properties?.id;
+      if (id) {
+        navigation.navigate('EventDetail', {eventId: id});
+      }
+    },
+    [navigation],
+  );
 
   return (
     <View style={styles.container} testID="map-screen">
@@ -241,23 +262,28 @@ export default function MapScreen(): React.JSX.Element {
         </View>
       ) : null}
 
+      {/*
+        The Camera has NO declarative position props (no centerCoordinate,
+        no zoomLevel, no animationMode).  All positioning is done imperatively
+        via cameraRef.current.setCamera(), called only from handleMapLoaded
+        (after the GL surface is confirmed ready) and from user actions.
+        This prevents the camera from trying to animate against a surface
+        that is mid-reconstruction, which was the cause of the black screen.
+      */}
       <MapboxGL.MapView
         style={styles.map}
         styleURL={MapboxGL.StyleURL.Dark}
         compassEnabled
         attributionEnabled={false}
         logoEnabled={false}
-        onDidFinishLoadingMap={() => setMapReady(true)}>
-        <MapboxGL.Camera
-          ref={cameraRef}
-          zoomLevel={zoomLevel}
-          centerCoordinate={cameraCenter}
-          animationMode={mapReady ? 'flyTo' : 'none'}
-          animationDuration={mapReady ? 1000 : 0}
-        />
+        testID="map-view"
+        onDidFinishLoadingMap={handleMapLoaded}>
+        <MapboxGL.Camera ref={cameraRef} />
 
-        {/* Heatmap layer */}
-        <MapboxGL.ShapeSource id="events-source" shape={featureCollection}>
+        <MapboxGL.ShapeSource
+          id="events-source"
+          shape={featureCollection}
+          onPress={handleShapePress}>
           <MapboxGL.HeatmapLayer
             id="events-heatmap"
             sourceID="events-source"
@@ -270,32 +296,6 @@ export default function MapScreen(): React.JSX.Element {
             style={CIRCLE_LAYER_STYLE}
           />
         </MapboxGL.ShapeSource>
-
-        {/* Individual event annotations — tap to open event detail */}
-        {filteredEvents.map(event => (
-          <MapboxGL.PointAnnotation
-            key={event.id}
-            id={`annotation-${event.id}`}
-            coordinate={[event.location.longitude, event.location.latitude]}
-            onSelected={() =>
-              navigation.navigate('EventDetail', {eventId: event.id})
-            }>
-            <TouchableOpacity
-              style={styles.markerHitArea}
-              onPress={() =>
-                navigation.navigate('EventDetail', {eventId: event.id})
-              }
-              accessibilityLabel={event.title}
-              accessibilityRole="button">
-              <View
-                style={[
-                  styles.marker,
-                  {backgroundColor: VIBE_COLORS[event.vibe]},
-                ]}
-              />
-            </TouchableOpacity>
-          </MapboxGL.PointAnnotation>
-        ))}
       </MapboxGL.MapView>
 
       {/* Zoom controls */}
@@ -401,19 +401,6 @@ const styles = StyleSheet.create({
     color: '#FCA5A5',
     fontSize: 13,
     textAlign: 'center',
-  },
-  markerHitArea: {
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  marker: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: '#fff',
   },
   zoomControls: {
     position: 'absolute',

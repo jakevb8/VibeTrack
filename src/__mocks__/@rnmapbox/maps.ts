@@ -2,9 +2,21 @@
 import React from 'react';
 import {View} from 'react-native';
 
+// setCamera spy — exported so tests can assert on it.
+export const mockSetCamera = jest.fn();
+
+const CameraWithRef = React.forwardRef<
+  {setCamera: jest.Mock},
+  Record<string, unknown>
+>((_props, ref) => {
+  React.useImperativeHandle(ref, () => ({setCamera: mockSetCamera}), []);
+  return null;
+});
+CameraWithRef.displayName = 'Camera';
+
 const MapboxGL = {
   MapView: (props: Record<string, unknown>) => React.createElement(View, props),
-  Camera: () => null,
+  Camera: CameraWithRef,
   PointAnnotation: (props: Record<string, unknown>) =>
     React.createElement(View, props),
   ShapeSource: (props: Record<string, unknown>) =>
