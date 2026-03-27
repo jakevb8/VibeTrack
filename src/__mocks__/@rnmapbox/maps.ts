@@ -23,6 +23,7 @@ const MapboxGL = {
     React.createElement(View, props),
   HeatmapLayer: () => null,
   CircleLayer: () => null,
+  SymbolLayer: () => null,
   setAccessToken: jest.fn(),
   StyleURL: {
     Dark: 'mapbox://styles/mapbox/dark-v11',

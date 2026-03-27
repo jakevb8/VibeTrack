@@ -4,9 +4,8 @@
  * Key invariants:
  * - The camera is NEVER driven by declarative JSX props.
  * - setCamera() is called only after onDidFinishLoadingMap fires.
- * - The Map tab uses unmountOnBlur:true so every tab focus is a fresh mount;
- *   onDidFinishLoadingMap reliably fires on every mount and the Android GL
- *   render thread starts clean with no surface-resurrection race.
+ * - useFocusEffect increments mapKey to force-remount the MapView on every
+ *   focus, covering both tab navigation and stack pop-back from EventDetail.
  */
 import React from 'react';
 import {render, act, fireEvent} from '@testing-library/react-native';
@@ -17,9 +16,14 @@ import MapScreen, {geocodeLocation} from '../screens/MapScreen';
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => {
   const actual = jest.requireActual('@react-navigation/native');
+  const mockReact = require('react');
   return {
     ...actual,
     useNavigation: () => ({navigate: mockNavigate}),
+    // Simulate useFocusEffect firing on mount (like a focused screen).
+    useFocusEffect: (cb: () => void) => {
+      mockReact.useEffect(cb, [cb]);
+    },
   };
 });
 
@@ -89,6 +93,11 @@ describe('MapScreen — imperative camera lifecycle', () => {
   it('renders the map screen without crashing', () => {
     const {getByTestId} = render(<MapScreen />);
     expect(getByTestId('map-screen')).toBeTruthy();
+  });
+
+  it('map-view is rendered on mount', () => {
+    const {getByTestId} = render(<MapScreen />);
+    expect(getByTestId('map-view')).toBeTruthy();
   });
 
   it('calls setCamera imperatively when onDidFinishLoadingMap fires', async () => {

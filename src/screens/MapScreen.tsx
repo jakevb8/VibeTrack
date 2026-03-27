@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import MapboxGL from '@rnmapbox/maps';
 import {MAPBOX_ACCESS_TOKEN} from '@env';
-import {useNavigation} from '@react-navigation/native';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useVibeStore} from '../store/useVibeStore';
 import {VIBE_COLORS} from '../utils/vibeUtils';
@@ -53,12 +53,35 @@ const CIRCLE_COLOR_EXPR = [
   '#fff',
 ];
 
+// Emoji icon per vibe type — rendered as SymbolLayer text at zoom >= 12.
+// Using text-field (emoji) avoids per-marker native PointAnnotation views.
+const VIBE_EMOJI_EXPR = [
+  'match',
+  ['get', 'vibe'],
+  'Hype',
+  '⚡',
+  'Chill',
+  '🌊',
+  'Social',
+  '👥',
+  'Creative',
+  '🎨',
+  '📍',
+];
+
 const CIRCLE_LAYER_STYLE = {
-  circleRadius: 8,
+  circleRadius: 14,
   circleColor: CIRCLE_COLOR_EXPR,
   circleStrokeWidth: 2,
   circleStrokeColor: '#fff',
-  circleOpacity: 0.9,
+  circleOpacity: 0.85,
+};
+
+const SYMBOL_LAYER_STYLE = {
+  textField: VIBE_EMOJI_EXPR,
+  textSize: 14,
+  textAllowOverlap: true,
+  textIgnorePlacement: true,
 };
 
 function buildHeatmapFeatureCollection(events: VibeEvent[]) {
@@ -117,6 +140,11 @@ export default function MapScreen(): React.JSX.Element {
   const cameraCenterRef = useRef<[number, number]>(defaultCenter);
   const zoomLevelRef = useRef<number>(12);
 
+  // Incrementing this key forces only the MapboxGL.MapView to remount,
+  // giving the Android GL render thread a clean start. Applied on every
+  // focus event so it fires on both tab navigation AND stack pop-back.
+  const [mapKey, setMapKey] = useState(0);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -141,9 +169,17 @@ export default function MapScreen(): React.JSX.Element {
     });
   }, []);
 
-  // The Map tab uses unmountOnBlur:true in RootNavigator, so the MapView is
-  // fully remounted on every tab focus — the Android GL render thread always
-  // starts fresh and onDidFinishLoadingMap reliably fires on every mount.
+  // Force-remount the MapView on every focus (tab switch AND stack pop-back).
+  // This gives the Android GL render thread a clean surface every time.
+  // The tab also has unmountOnBlur:true as a belt-and-suspenders for tab switches.
+  useFocusEffect(
+    useCallback(() => {
+      log('useFocusEffect — incrementing mapKey');
+      setMapKey(k => k + 1);
+    }, []),
+  );
+
+  // onDidFinishLoadingMap fires on every fresh MapView mount.
   const handleMapLoaded = useCallback(() => {
     log('onDidFinishLoadingMap fired');
     applyCameraPosition(false);
@@ -273,6 +309,7 @@ export default function MapScreen(): React.JSX.Element {
         that is mid-reconstruction, which was the cause of the black screen.
       */}
       <MapboxGL.MapView
+        key={mapKey}
         style={styles.map}
         styleURL={MapboxGL.StyleURL.Dark}
         compassEnabled
@@ -296,6 +333,12 @@ export default function MapScreen(): React.JSX.Element {
             sourceID="events-source"
             minZoomLevel={12}
             style={CIRCLE_LAYER_STYLE}
+          />
+          <MapboxGL.SymbolLayer
+            id="events-icons"
+            sourceID="events-source"
+            minZoomLevel={12}
+            style={SYMBOL_LAYER_STYLE}
           />
         </MapboxGL.ShapeSource>
       </MapboxGL.MapView>
