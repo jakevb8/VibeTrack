@@ -15,6 +15,11 @@ import {useVibeStore} from '../store/useVibeStore';
 import {VIBE_COLORS} from '../utils/vibeUtils';
 import type {VibeEvent, RootStackParamList} from '../types';
 
+// Debug logger — only active in dev builds; stripped entirely in production.
+const log = __DEV__
+  ? (...args: unknown[]) => console.log('[MapScreen]', ...args)
+  : () => {};
+
 MapboxGL.setAccessToken(MAPBOX_ACCESS_TOKEN);
 
 const SF_CENTER: [number, number] = [-122.4194, 37.7749];
@@ -113,6 +118,11 @@ export default function MapScreen(): React.JSX.Element {
   const cameraCenterRef = useRef<[number, number]>(defaultCenter);
   const zoomLevelRef = useRef<number>(12);
 
+  // Tracks whether the GL surface has signalled it is ready at least once.
+  // Used to guard useFocusEffect so we don't fire setCamera before the
+  // surface exists (which would silently no-op and leave a black screen).
+  const mapReadyRef = useRef<boolean>(false);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -123,6 +133,13 @@ export default function MapScreen(): React.JSX.Element {
   // This is the ONLY place we call setCamera — always after the map has
   // signalled it is ready, never from props.
   const applyCameraPosition = useCallback((animated: boolean) => {
+    log(
+      'applyCameraPosition',
+      animated ? 'animated' : 'snap',
+      cameraCenterRef.current,
+      'zoom',
+      zoomLevelRef.current,
+    );
     cameraRef.current?.setCamera({
       centerCoordinate: cameraCenterRef.current,
       zoomLevel: zoomLevelRef.current,
@@ -135,15 +152,39 @@ export default function MapScreen(): React.JSX.Element {
   // first mount AND every time the surface is recreated (e.g. app returning
   // from background).  This is the authoritative "map is ready" signal.
   const handleMapLoaded = useCallback(() => {
+    log('onDidFinishLoadingMap fired');
+    mapReadyRef.current = true;
     applyCameraPosition(false);
   }, [applyCameraPosition]);
 
-  // On tab focus, nudge the camera back.  If the map surface is mid-load
-  // (e.g. app just returned from background) this is a safe no-op because
-  // handleMapLoaded will fire and position the camera once the surface is up.
+  // onDidFinishRenderingMapFully fires every time the map fully renders a
+  // frame, including after the GL surface is recreated on tab navigation.
+  // We use this as a one-shot signal to reposition the camera after the
+  // surface comes back — then clear the flag so we don't fire on every frame.
+  const renderCompletePositionedRef = useRef<boolean>(false);
+  const handleMapRenderComplete = useCallback(() => {
+    log(
+      'onDidFinishRenderingMapFully fired, positioned:',
+      renderCompletePositionedRef.current,
+    );
+    if (!renderCompletePositionedRef.current) {
+      renderCompletePositionedRef.current = true;
+      mapReadyRef.current = true;
+      applyCameraPosition(false);
+    }
+  }, [applyCameraPosition]);
+
+  // On tab focus, reset the render-complete one-shot flag so the next
+  // onDidFinishRenderingMapFully will re-position the camera (handles GL
+  // surface recreation on Android when the tab was off-screen).
+  // If the map is already ready, also apply the position immediately.
   useFocusEffect(
     useCallback(() => {
-      applyCameraPosition(false);
+      log('useFocusEffect — mapReady:', mapReadyRef.current);
+      renderCompletePositionedRef.current = false;
+      if (mapReadyRef.current) {
+        applyCameraPosition(false);
+      }
     }, [applyCameraPosition]),
   );
 
@@ -277,7 +318,8 @@ export default function MapScreen(): React.JSX.Element {
         attributionEnabled={false}
         logoEnabled={false}
         testID="map-view"
-        onDidFinishLoadingMap={handleMapLoaded}>
+        onDidFinishLoadingMap={handleMapLoaded}
+        onDidFinishRenderingMapFully={handleMapRenderComplete}>
         <MapboxGL.Camera ref={cameraRef} />
 
         <MapboxGL.ShapeSource

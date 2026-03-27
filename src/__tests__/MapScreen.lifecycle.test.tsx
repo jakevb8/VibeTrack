@@ -3,7 +3,7 @@
  *
  * The key invariant: the camera is NEVER driven by declarative JSX props.
  * Instead, setCamera() is called imperatively only after the map surface
- * signals it is ready (onDidFinishLoadingMap / handleMapLoaded).
+ * signals it is ready (onDidFinishLoadingMap / onDidFinishRenderingMapFully).
  */
 import React from 'react';
 import {render, act, fireEvent} from '@testing-library/react-native';
@@ -205,6 +205,38 @@ describe('MapScreen — imperative camera lifecycle', () => {
 
     const errorBanner = await findByTestId('map-search-error');
     expect(errorBanner).toBeTruthy();
+  });
+
+  it('calls setCamera when onDidFinishRenderingMapFully fires for the first time', async () => {
+    const {getByTestId} = render(<MapScreen />);
+    mockSetCamera.mockClear();
+
+    const mapView = getByTestId('map-view');
+    await act(async () => {
+      fireEvent(mapView, 'didFinishRenderingMapFully');
+    });
+
+    expect(mockSetCamera).toHaveBeenCalledWith(
+      expect.objectContaining({
+        animationMode: 'none',
+        animationDuration: 0,
+      }),
+    );
+  });
+
+  it('does not call setCamera again on subsequent onDidFinishRenderingMapFully frames (one-shot)', async () => {
+    const {getByTestId} = render(<MapScreen />);
+    mockSetCamera.mockClear();
+
+    const mapView = getByTestId('map-view');
+    await act(async () => {
+      fireEvent(mapView, 'didFinishRenderingMapFully');
+      fireEvent(mapView, 'didFinishRenderingMapFully');
+      fireEvent(mapView, 'didFinishRenderingMapFully');
+    });
+
+    // Should only have been called once despite three render-complete events
+    expect(mockSetCamera).toHaveBeenCalledTimes(1);
   });
 
   it('calls setCamera with flyTo animation after a successful search', async () => {
