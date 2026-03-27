@@ -1,9 +1,12 @@
 /**
  * Tests for MapScreen imperative camera lifecycle.
  *
- * The key invariant: the camera is NEVER driven by declarative JSX props.
- * Instead, setCamera() is called imperatively only after the map surface
- * signals it is ready (onDidFinishLoadingMap / onDidFinishRenderingMapFully).
+ * Key invariants:
+ * - The camera is NEVER driven by declarative JSX props.
+ * - setCamera() is called only after onDidFinishLoadingMap fires.
+ * - The Map tab uses unmountOnBlur:true so every tab focus is a fresh mount;
+ *   onDidFinishLoadingMap reliably fires on every mount and the Android GL
+ *   render thread starts clean with no surface-resurrection race.
  */
 import React from 'react';
 import {render, act, fireEvent} from '@testing-library/react-native';
@@ -14,14 +17,9 @@ import MapScreen, {geocodeLocation} from '../screens/MapScreen';
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => {
   const actual = jest.requireActual('@react-navigation/native');
-  const mockReact = require('react');
   return {
     ...actual,
     useNavigation: () => ({navigate: mockNavigate}),
-    useFocusEffect: (cb: () => void) => {
-      // Call the effect synchronously on mount, like a focused tab.
-      mockReact.useEffect(cb, [cb]);
-    },
   };
 });
 
@@ -95,7 +93,7 @@ describe('MapScreen — imperative camera lifecycle', () => {
 
   it('calls setCamera imperatively when onDidFinishLoadingMap fires', async () => {
     const {getByTestId} = render(<MapScreen />);
-    mockSetCamera.mockClear(); // clear any calls from useFocusEffect on mount
+    mockSetCamera.mockClear();
 
     const mapView = getByTestId('map-view');
     await act(async () => {
@@ -156,7 +154,6 @@ describe('MapScreen — imperative camera lifecycle', () => {
     const {getByTestId} = render(<MapScreen />);
     mockSetCamera.mockClear();
 
-    // Press zoom-in 20 times to saturate
     await act(async () => {
       for (let i = 0; i < 20; i++) {
         fireEvent.press(getByTestId('map-zoom-in'));
@@ -172,7 +169,6 @@ describe('MapScreen — imperative camera lifecycle', () => {
     const {getByTestId} = render(<MapScreen />);
     mockSetCamera.mockClear();
 
-    // Press zoom-out 20 times to bottom out
     await act(async () => {
       for (let i = 0; i < 20; i++) {
         fireEvent.press(getByTestId('map-zoom-out'));
@@ -205,38 +201,6 @@ describe('MapScreen — imperative camera lifecycle', () => {
 
     const errorBanner = await findByTestId('map-search-error');
     expect(errorBanner).toBeTruthy();
-  });
-
-  it('calls setCamera when onDidFinishRenderingMapFully fires for the first time', async () => {
-    const {getByTestId} = render(<MapScreen />);
-    mockSetCamera.mockClear();
-
-    const mapView = getByTestId('map-view');
-    await act(async () => {
-      fireEvent(mapView, 'didFinishRenderingMapFully');
-    });
-
-    expect(mockSetCamera).toHaveBeenCalledWith(
-      expect.objectContaining({
-        animationMode: 'none',
-        animationDuration: 0,
-      }),
-    );
-  });
-
-  it('does not call setCamera again on subsequent onDidFinishRenderingMapFully frames (one-shot)', async () => {
-    const {getByTestId} = render(<MapScreen />);
-    mockSetCamera.mockClear();
-
-    const mapView = getByTestId('map-view');
-    await act(async () => {
-      fireEvent(mapView, 'didFinishRenderingMapFully');
-      fireEvent(mapView, 'didFinishRenderingMapFully');
-      fireEvent(mapView, 'didFinishRenderingMapFully');
-    });
-
-    // Should only have been called once despite three render-complete events
-    expect(mockSetCamera).toHaveBeenCalledTimes(1);
   });
 
   it('calls setCamera with flyTo animation after a successful search', async () => {

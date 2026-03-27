@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import MapboxGL from '@rnmapbox/maps';
 import {MAPBOX_ACCESS_TOKEN} from '@env';
-import {useFocusEffect, useNavigation} from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useVibeStore} from '../store/useVibeStore';
 import {VIBE_COLORS} from '../utils/vibeUtils';
@@ -112,16 +112,10 @@ export default function MapScreen(): React.JSX.Element {
 
   const cameraRef = useRef<MapboxGL.Camera>(null);
 
-  // The desired camera position is tracked in refs, not state, so that
-  // changes to it never trigger a re-render that might push a prop-driven
-  // camera update onto a surface that isn't ready yet.
+  // Camera position tracked in refs — never in state — so mutations never
+  // trigger a re-render that could push a prop update onto an unready surface.
   const cameraCenterRef = useRef<[number, number]>(defaultCenter);
   const zoomLevelRef = useRef<number>(12);
-
-  // Tracks whether the GL surface has signalled it is ready at least once.
-  // Used to guard useFocusEffect so we don't fire setCamera before the
-  // surface exists (which would silently no-op and leave a black screen).
-  const mapReadyRef = useRef<boolean>(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -130,8 +124,7 @@ export default function MapScreen(): React.JSX.Element {
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   // Imperatively move the camera to the current desired position.
-  // This is the ONLY place we call setCamera — always after the map has
-  // signalled it is ready, never from props.
+  // Only ever called after the map signals it is ready — never from props.
   const applyCameraPosition = useCallback((animated: boolean) => {
     log(
       'applyCameraPosition',
@@ -148,45 +141,13 @@ export default function MapScreen(): React.JSX.Element {
     });
   }, []);
 
-  // Called by Mapbox when the GL surface finishes loading its style — both on
-  // first mount AND every time the surface is recreated (e.g. app returning
-  // from background).  This is the authoritative "map is ready" signal.
+  // The Map tab uses unmountOnBlur:true in RootNavigator, so the MapView is
+  // fully remounted on every tab focus — the Android GL render thread always
+  // starts fresh and onDidFinishLoadingMap reliably fires on every mount.
   const handleMapLoaded = useCallback(() => {
     log('onDidFinishLoadingMap fired');
-    mapReadyRef.current = true;
     applyCameraPosition(false);
   }, [applyCameraPosition]);
-
-  // onDidFinishRenderingMapFully fires every time the map fully renders a
-  // frame, including after the GL surface is recreated on tab navigation.
-  // We use this as a one-shot signal to reposition the camera after the
-  // surface comes back — then clear the flag so we don't fire on every frame.
-  const renderCompletePositionedRef = useRef<boolean>(false);
-  const handleMapRenderComplete = useCallback(() => {
-    log(
-      'onDidFinishRenderingMapFully fired, positioned:',
-      renderCompletePositionedRef.current,
-    );
-    if (!renderCompletePositionedRef.current) {
-      renderCompletePositionedRef.current = true;
-      mapReadyRef.current = true;
-      applyCameraPosition(false);
-    }
-  }, [applyCameraPosition]);
-
-  // On tab focus, reset the render-complete one-shot flag so the next
-  // onDidFinishRenderingMapFully will re-position the camera (handles GL
-  // surface recreation on Android when the tab was off-screen).
-  // If the map is already ready, also apply the position immediately.
-  useFocusEffect(
-    useCallback(() => {
-      log('useFocusEffect — mapReady:', mapReadyRef.current);
-      renderCompletePositionedRef.current = false;
-      if (mapReadyRef.current) {
-        applyCameraPosition(false);
-      }
-    }, [applyCameraPosition]),
-  );
 
   const handleSearch = useCallback(async () => {
     const trimmed = searchQuery.trim();
@@ -318,8 +279,7 @@ export default function MapScreen(): React.JSX.Element {
         attributionEnabled={false}
         logoEnabled={false}
         testID="map-view"
-        onDidFinishLoadingMap={handleMapLoaded}
-        onDidFinishRenderingMapFully={handleMapRenderComplete}>
+        onDidFinishLoadingMap={handleMapLoaded}>
         <MapboxGL.Camera ref={cameraRef} />
 
         <MapboxGL.ShapeSource

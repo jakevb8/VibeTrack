@@ -50,6 +50,7 @@ function MainTabs(): React.JSX.Element {
         options={{
           tabBarLabel: 'Map',
           tabBarIcon: MapIcon,
+          unmountOnBlur: true,
         }}
       />
       <Tab.Screen
